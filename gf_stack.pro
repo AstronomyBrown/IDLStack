@@ -93,9 +93,9 @@
 ;
 ;				lims = bin limits param 1
 ;
-;				lim_ab = bin limits param 2
+;				ylim = bin limits param 2
 ;
-;				lim_ii = bin limits param 3
+;				zlim = bin limits param 3
 ;
 ;				MEAN_MS = stellar mass for non_detection calc
 ;
@@ -258,8 +258,11 @@ ssfr_tot = data_tab_tot.MEDIAN_SSFR
 fapc_tot = data_tab_tot.fa_prank ; fixed aperture percentage rank
 nnpc_tot = data_tab_tot.nn7_prank ; nth Neighbour percentage rank
 mhpc_tot = data_tab_tot.mh_prank ; nth Neighbour percentage rank
-catch, error
-IF (error ne 0L) THEN BEGIN
+
+print,'Total no. input objects:',ndata_tot
+
+CATCH, ERROR
+IF (ERROR ne 0L) THEN BEGIN
     catch, /cancel
     print, 'No Metallicities in input file'
     print, ''
@@ -268,12 +271,56 @@ IF (error ne 0L) THEN BEGIN
     goto, skipmetal
 ENDIF
 lgOH_12_tot = data_tab_tot.OH_MEDIAN_T04 ; log O/H + 12 metallicity, MPA cat.
+CATCH, /CANCEL
+
+;; Ask user for options if keyword set
+
+read,lgOHstack,prompt='Do you want to stack: full sample (1) or T04 metallicity (2) sample?  '
+
+IF lgOHstack EQ 2 THEN BEGIN
+
+	valid_metal = WHERE(lgOH_12_tot GT 0.)
+	ra_tot = ra_tot[valid_metal]
+	dec_tot = dec_tot[valid_metal]
+	z_tot = z_tot[valid_metal]
+	mass_tot = mass_tot[valid_metal]
+	ID_tot = ID_tot[valid_metal]
+	IAU_tot = IAU_tot[valid_metal]
+	halo_tot = halo_tot[valid_metal]
+	MUst_tot = MUst_tot[valid_metal]
+	C_tot = C_tot[valid_metal]
+	NUVR_tot = NUVR_tot[valid_metal]
+	mass_hi_tot = mass_hi_tot[valid_metal]
+	detcode_tot = detcode_tot[valid_metal]
+	BCGflag_tot = BCGflag_tot[valid_metal]
+	ngal_tot = ngal_tot[valid_metal]
+	sfr_tot = sfr_tot[valid_metal]
+	ssfr_tot = ssfr_tot[valid_metal]
+	fapc_tot = fapc_tot[valid_metal]
+	nnpc_tot = nnpc_tot[valid_metal]
+	mhpc_tot = mhpc_tot[valid_metal]
+	lgOH_12_tot = lgOH_12_tot[valid_metal]
+
+	print,'No. objects:',N_ELEMENTS(ra_tot)
+ENDIF
+
+
 skipmetal:
 ; (log M*)/(log Mh) baryon -> star efficiency
 ; ms_mh_tot = mass_tot/halo_tot
 
-;; Ask user for options if keyword set
+
+; default settings
 whatstack=3 ; set default to gas fractions
+output = 'test' ; directory
+BCG_stack = 1
+CDFchoice = 'Y'
+CDFstack = 1
+whatp1 = 99
+whatp2 = 99
+whatp3 = 99
+
+;; Ask user for options if keyword set
 IF KEYWORD_SET(stackq) THEN read,whatstack,prompt='Do you want to stack: fluxes (1), M_HI (2) or gas fractions = M_HI/M_* (3, default)?  '
 
 ;;Correct for beam confusion? No
@@ -283,17 +330,15 @@ conf_flag=0
 if (STRCMP(confcorrection,'yes',1, /FOLD_CASE) EQ 1) then   conf_flag=1
 
 ; create directory in which results will be written
-output = ''
-read, output, prompt='Please enter output directory name: '
+; read, output, prompt='Please enter output directory name: '
 spawn,'mkdir '+output
 print,'Results will be in directory ',output
 
 
-BCG_stack = 1
 BCG_stack_str = ['','Select the sample you want to stack:', 'all galaxies: 1', 'isolated centrals: 2',$ 
 						'group centrals: 3', 'all centrals: 4', 'satellites: 5', '']
 print, BCG_stack_str, FORMAT='(A)' 
-read, BCG_stack ,prompt=''
+; read, BCG_stack ,prompt=''
 print, ''
 
 ; selection added to use correct percentage ranks according to sat/cent/all designation
@@ -306,13 +351,26 @@ IF BCG_stack EQ 5 THEN BEGIN
 	PRINT, ''
 ENDIF
 
+CDFchoice_str = ['','Are you stacking using default cumulative distribution function (CDF) binning?',$
+					 '(Y/N)', '']
+print, CDFchoice_str, FORMAT='(A)' 
+; read, CDFchoice ,prompt=''
+CDFchoice = strmid(strupcase(CDFchoice),0,1)
+
+IF CDFchoice EQ 'Y' THEN BEGIN
+	CDFstack_str = ['','Which CDF bins do you want to stack?', 'Mass-Metallicity: 1', 'Mass-SFR: 2',$ 
+						'Mass-sSFR: 3', '']
+	print, CDFstack_str, FORMAT='(A)' 
+	; read, CDFstack ,prompt=''
+	goto, paramskip
+	print, ''
+ENDIF
 ; Select the parameters and set limits
 whatp1_str = ['','What is the first parameter? ',$
 				 'Stellar Mass: 1','NUV-r Colour: 2', $
 				 	'Stellar Density: 3', 'Halo Mass: 4', $
 				 		'SSFR: 5', 'Metalicity: 6', '']
 print, whatp1_str, FORMAT='(A)' 
-whatp1 = 9
 read,whatp1,prompt=''
 print, ''
 
@@ -322,10 +380,9 @@ whatp2_str = ['','What is the second parameter? ', 'Stellar Mass: 1',$
 				 'Halo Mass p-rank: 9', 'Group Ngal: 10', 'Metalicity: 11', $
 				 'redshift: 12','NONE: 99','']
 print, whatp2_str, FORMAT='(A)'
-whatp2 = 99
-lim_ab = [-99., 99.]
+ylim = [-99., 99.]
 read,whatp2,prompt=''
-IF whatp2 LT 99 THEN read,lim_ab,prompt='Enter limits for parameter 2 (e.g. >>> -99,99): '
+IF whatp2 LT 99 THEN read,ylim,prompt='Enter limits for parameter 2 (e.g. >>> -99,99): '
 print, ''
 
 whatp3_str = ['','What is the second parameter? ', 'Stellar Mass: 1',$
@@ -334,23 +391,19 @@ whatp3_str = ['','What is the second parameter? ', 'Stellar Mass: 1',$
 				 'Halo Mass p-rank: 9', 'Group Ngal: 10', 'Metalicity: 11', $
 				 'redshift: 12','NONE: 99','']
 print, whatp3_str, FORMAT='(A)' 
-whatp3 = 99
-lim_ii = [-99., 99.]
-read,whatp3,prompt=''
-IF whatp3 LT 99 THEN read,lim_ii,prompt='Enter limits for parameter 3 (e.g. >>> -99,99): ' 
+zlim = [-99., 99.]
+; read,whatp3,prompt=''
+IF whatp3 LT 99 THEN read,zlim,prompt='Enter limits for parameter 3 (e.g. >>> -99,99): ' 
 print, ''
 
 ;; Default binning
 CASE whatp1 OF
 	1: BEGIN
-		low_lim = [9., 9.4, 9.9, 10.4, 10.9]
-		up_lim = [9.4, 9.9, 10.4, 10.9, 11.5] ; Mst binning
+		xlim = [9., 9.4, 9.9, 10.4, 10.9, 11.5]
 	END
 	2: BEGIN
-		; low_lim = [1, 2.3, 3.3, 4.3, 5.3]
-		; up_lim = [2.3, 3.3, 4.3 ,5.3, 8]	; NUV-r binning
-		low_lim = [1, 3, 4, 5]
-		up_lim = [3, 4, 5 , 8]	; NUV-r binning
+		; xlim = [1, 2.3, 3.3, 4.3, 5.3, 8]
+		xlim = [1, 3, 4, 5, 8]
 		;; change limits if binning by 3rd parameter
 		IF (whatp3 le 4) OR (whatp2 eq 4) THEN BEGIN
 			PRINT, ''
@@ -359,32 +412,65 @@ CASE whatp1 OF
 			PRINT, 'New bins: 1-3, 3-4, 4-5, 5-8'
 			PRINT, ''
 			PRINT, ''
-			low_lim = [1, 3, 4, 5]
-			up_lim = [3, 4, 5 , 8]	; NUV-r binning
+			xlim = [1, 3, 4, 5, 8]
 		ENDIF
 	END
 	3: BEGIN
-		low_lim = [7., 7.6, 8.1, 8.5, 9]
-		up_lim =  [7.6, 8.1, 8.5, 9, 10.]	; mu_star binning
+		xlim = [7., 7.6, 8.1, 8.5, 9, 10.]
 	END
 	4: BEGIN
-		low_lim = [10., 11., 12., 13., 14.]
-		up_lim =  [11., 12., 13., 14.1, 15.]	; Mh binning
+		xlim = [10., 11., 12., 13., 14., 15.]
 	END
 	5: BEGIN
-		low_lim = [-13., -11.5,-10.5, -9.5]
-		up_lim =  [-11.5,-10.5, -9.5, -8.]	; SSFR binning
+		xlim = [-13., -11.5,-10.5, -9.5, -8.]
 	END
 	6: BEGIN
-		low_lim = [7.0, 8.5, 8.8, 9.1]
-		up_lim =  [8.5, 8.8, 9.1, 10.]	; log(O/H) + 12 binning
+		xlim = [7.0, 8.5, 8.8, 9.1, 10.]
 	END	
 ENDCASE
 
-FOR j=0,N_ELEMENTS(low_lim)-1 DO BEGIN
+paramskip:
+IF CDFchoice EQ 'N' THEN goto, CDFskip
+
+xlim = [9.0001001, 9.2849998, 9.5586004, 10.0143, 10.455, 11.3904]
+zlim = [-99., 99.]
+whatp1 = 1
+whatp3 = 99
+
+CASE CDFstack OF
+	1: BEGIN
+	whatp2 = 11
+	ylim = [[7.8517404, 8.3555813, 8.5795593, 8.6971941, 8.8683567, 9.1593418],$
+			[7.9553475, 8.5359583, 8.7022781, 8.8282986, 8.9891253, 9.1287031],$
+			[8.217041, 8.6651611, 8.8460588, 8.9820194, 9.090579, 9.3092136],$
+			[8.4183912, 8.8465328, 9.0033064, 9.0896778, 9.1634121, 9.3099995],$
+			[8.2816458, 8.9561119, 9.0910597, 9.1488991, 9.2315474, 9.3099995]]
+	END
+	2: BEGIN
+	whatp2 = 5
+	ylim = [[-2.3935895, -1.1141304, -0.60889322, -0.38187835, -0.10649344, 0.43563241],$
+			[-2.3204467, -0.91997862, -0.47876704, -0.24858695, 0.02762159, 0.95069063],$
+			[-2.3260891, -0.82003331, -0.29585177, -0.047595881, 0.23803426, 1.2275001],$
+			[-1.9641527, -0.4951247, -0.027307536, 0.23015195, 0.56418836, 1.3737562],$
+			[-1.8785964, -0.23025744, 0.2563177, 0.55092418, 0.89882821, 1.4163351]]
+	END
+	3: BEGIN
+	whatp2 = 6
+	ylim = [[-11.478507, -10.314604, -9.8320446, -9.5859375, -9.3076916, -8.7876368],$
+			[-11.84898, -10.402778, -9.9624701, -9.7282314, -9.4568176, -8.5930595],$
+			[-12.023958, -10.650709, -10.127298, -9.8725386, -9.574542, -8.7592964],$
+			[-12.155935, -10.737983, -10.288836, -10.022985, -9.7140789, -9.0466337],$
+			[-12.900444, -10.96002, -10.436883, -10.149607, -9.7765598, -9.1551046]]
+	END
+ENDCASE
+CDFskip:
+
+FOR j=0,N_ELEMENTS(xlim)-2 DO BEGIN
+	FOR k=0,N_ELEMENTS(ylim[*,0])-2 DO BEGIN
 	
-	bin_no = STRCOMPRESS((j + 1), /remove_all)
-	
+	xbin_no = STRCOMPRESS((j + 1), /remove_all)
+	ybin_no = STRCOMPRESS((k + 1), /remove_all)
+
 	CASE whatp1 OF
 	    1: param_1 = mass_tot
 	    2: param_1 = NUVR_tot
@@ -432,39 +518,39 @@ FOR j=0,N_ELEMENTS(low_lim)-1 DO BEGIN
 	;; upper and lower limit condition on bins
 	CASE BCG_stack OF
 	1: BEGIN
-		PRINT, 'stacking all galaxies'
-	    bin_cond = WHERE((param_1 ge low_lim[j]) AND (param_1 lt up_lim[j]) $
-	        AND (param_2 ge lim_ab[0]) AND (param_2 lt lim_ab[1]) $ ; 
-	        AND (param_3 ge lim_ii[0]) AND (param_3 lt lim_ii[1]))
+	    bin_cond = WHERE((param_1 ge xlim[j]) AND (param_1 lt xlim[j+1]) $
+	        AND (param_2 ge ylim[k,j]) AND (param_2 lt ylim[k+1,j]) $ ; 
+	        AND (param_3 ge zlim[0]) AND (param_3 lt zlim[1]))
 	        ; AND (detcode_tot eq 1)
 	    END
+
 	2: BEGIN ; isolated
 		PRINT, 'stacking isolated central galaxies (Ngal=1 & bcgflag=1)'
-	    bin_cond = WHERE((param_1 ge low_lim[j]) AND (param_1 lt up_lim[j]) $
-	        AND (param_2 ge lim_ab[0]) AND (param_2 lt lim_ab[1]) $ ; 
-	        AND (param_3 ge lim_ii[0]) AND (param_3 lt lim_ii[1]) $
+	    bin_cond = WHERE((param_1 ge xlim[j]) AND (param_1 lt xlim[j+1]) $
+	        AND (param_2 ge ylim[0]) AND (param_2 lt ylim[1]) $ ; 
+	        AND (param_3 ge zlim[0]) AND (param_3 lt zlim[1]) $
 	        AND (ngal_tot eq 1))
 	    END
 	3: BEGIN ; centrals
 		PRINT, 'stacking group central galaxies (Ngal>1 & bcgflag=1)'
-	    bin_cond = WHERE((param_1 ge low_lim[j]) AND (param_1 lt up_lim[j]) $
-	        AND (param_2 ge lim_ab[0]) AND (param_2 lt lim_ab[1]) $ ; 
-	        AND (param_3 ge lim_ii[0]) AND (param_3 lt lim_ii[1]) $
+	    bin_cond = WHERE((param_1 ge xlim[j]) AND (param_1 lt xlim[j+1]) $
+	        AND (param_2 ge ylim[0]) AND (param_2 lt ylim[1]) $ ; 
+	        AND (param_3 ge zlim[0]) AND (param_3 lt zlim[1]) $
 	        AND (BCGflag_tot eq 1) $
 	        AND (ngal_tot ge 2))
 	    END
 	4: BEGIN ; all centrals
 		PRINT, 'stacking all central galaxies (Ngal=1)'
-	    bin_cond = WHERE((param_1 ge low_lim[j]) AND (param_1 lt up_lim[j]) $
-	        AND (param_2 ge lim_ab[0]) AND (param_2 lt lim_ab[1]) $ ; 
-	        AND (param_3 ge lim_ii[0]) AND (param_3 lt lim_ii[1]) $
+	    bin_cond = WHERE((param_1 ge xlim[j]) AND (param_1 lt xlim[j+1]) $
+	        AND (param_2 ge ylim[0]) AND (param_2 lt ylim[1]) $ ; 
+	        AND (param_3 ge zlim[0]) AND (param_3 lt zlim[1]) $
 	        AND (BCGflag_tot eq 1))
 	    END
 	5: BEGIN ; satellites
 		PRINT, 'stacking satellite galaxies (Ngal>1 & bcgflag=2)'
-	    bin_cond = WHERE((param_1 ge low_lim[j]) AND (param_1 lt up_lim[j]) $
-	        AND (param_2 ge lim_ab[0]) AND (param_2 lt lim_ab[1]) $ ; 
-	        AND (param_3 ge lim_ii[0]) AND (param_3 lt lim_ii[1]) $
+	    bin_cond = WHERE((param_1 ge xlim[j]) AND (param_1 lt xlim[j+1]) $
+	        AND (param_2 ge ylim[0]) AND (param_2 lt ylim[1]) $ ; 
+	        AND (param_3 ge zlim[0]) AND (param_3 lt zlim[1]) $
 	        AND (BCGflag_tot eq 2))
 	    END
     ENDCASE
@@ -495,7 +581,7 @@ FOR j=0,N_ELEMENTS(low_lim)-1 DO BEGIN
 	lgOH_12 = lgOH_12_tot[bin_cond]
 
 
-	print, 'There are' + STRCOMPRESS(ndata) + ' galaxies in bin ' + bin_no
+	print, 'There are' + STRCOMPRESS(ndata) + ' galaxies in bin ' + xbin_no + '-' + ybin_no
 
 	;;1- Restore the .src structures for the galaxies in input ; 
 	;;keep two pols separated
@@ -521,7 +607,7 @@ FOR j=0,N_ELEMENTS(low_lim)-1 DO BEGIN
 	sconfone=DBLARR(ndata)
 	
 	;; Open LOG file to save data
-	wfile=output+'/'+output+'_bin_'+bin_no+'_LOG.dat'     
+	wfile=output+'/'+output+'_bin_'+xbin_no + '-' + ybin_no+'_LOG.dat'     
 	openw, lun, wfile, /get_lun
 	printf, lun, 'Stacking '+strcompress(whatstack, /remove_all)+' (1: fluxes, 2: M_HI, 3: M_HI/M_*)'
 	printf, lun, 'Beam confusion correction: '+confcorrection
@@ -533,7 +619,7 @@ FOR j=0,N_ELEMENTS(low_lim)-1 DO BEGIN
 	IF (ndata lt 5) THEN BEGIN
 		PRINT, ''
 		PRINT, '-------------------------------------------------'
-		PRINT, 'Less than 5 galaxies in bin + bin_no'
+		PRINT, 'Less than 5 galaxies in bin '+xbin_no + '-' + ybin_no
 		PRINT, 'SKIPPING!'
 		PRINT, ''
 		goto, nogalaxies
@@ -891,12 +977,12 @@ FOR j=0,N_ELEMENTS(low_lim)-1 DO BEGIN
 	print,' ------- SUMMARY --------------------------------------------------------------'
 	print,' ------------------------------------------------------------------------------'
 	print,'--> outputs:'
-	print,output+'/'+output+'_bin_'+bin_no+'.sav'
+	print,output+'/'+output+'_bin_'+xbin_no + '-' + ybin_no+'.sav'
 	print,''
 	print,' ------------------------------------------------------------------------------'
 	print,''
 
-	sname=output+'/'+output+'_bin_'+bin_no+'.sav'
+	sname=output+'/'+output+'_bin_'+xbin_no + '-' + ybin_no+'.sav'
 
 	hd={input:[z_avg,mst_avg,whatstack, conf_flag],file:output,index:index}
 	red={edge:[0,0],edge_err:[0,0],bmask:intarr(nchn),bord:0,smooth:0} ;reduction parameter
@@ -909,6 +995,7 @@ FOR j=0,N_ELEMENTS(low_lim)-1 DO BEGIN
 	sn={flx:fltarr(3),mhi:fltarr(3),gf:fltarr(3)}
 
 	stack ={hd:hd, $       ;z mean,mst mean, 0,0,0
+			ID:ID, $ ; list of id's used in stack.
 			nused:[nn,nnNdt,nnDtc,nconf], $
 			frqarr:frqarr, $
 			specA:specA, $
@@ -922,10 +1009,10 @@ FOR j=0,N_ELEMENTS(low_lim)-1 DO BEGIN
 			MHI:MHI,$
 			GF:GF,$
 			sn:sn,$
-			params:[whatp1, whatp2, whatp3, BCG_stack],$
-			lims:[[low_lim], [up_lim]],$ ; bin limits
-			lim_ab:lim_ab,$
-			lim_ii:lim_ii,$
+			usrparam:[whatp1, whatp2, whatp3, BCG_stack, CDFstack],$
+			xlims:xlim,$ ; bin limits
+			ylim:ylim,$
+			zlim:zlim,$
 			mean_binp:[mean_ms, mean_mh, mean_z, mean_mu, mean_c, mean_nuvr,$
 						mean_sfr, mean_ssfr, mean_aahi, mean_fapc, mean_nnpc,$
 						 	mean_logOH, mean_ngal],$ 
@@ -938,6 +1025,7 @@ FOR j=0,N_ELEMENTS(low_lim)-1 DO BEGIN
 	print,' '
 	close, lun
 	nogalaxies:
+	ENDFOR
 ENDFOR
 
 !P.MULTI=0

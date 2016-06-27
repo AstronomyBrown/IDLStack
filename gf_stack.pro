@@ -315,7 +315,7 @@ whatstack=3 ; set default to gas fractions
 output = 'test' ; directory
 BCG_stack = 1
 CDFchoice = 'Y'
-CDFstack = 1
+CDFstack = 3
 whatp1 = 99
 whatp2 = 99
 whatp3 = 99
@@ -326,11 +326,11 @@ IF KEYWORD_SET(stackq) THEN read,whatstack,prompt='Do you want to stack: fluxes 
 ;;Correct for beam confusion? No
 confcorrection='n' ; set default to no correction for beam confusion
 conf_flag=0
-;read,confcorrection,prompt='Do you want to correct for (eventual) beam confusion? [y/n] '
+; read,confcorrection,prompt='Do you want to correct for (eventual) beam confusion? [y/n] '
 if (STRCMP(confcorrection,'yes',1, /FOLD_CASE) EQ 1) then   conf_flag=1
 
 ; create directory in which results will be written
-; read, output, prompt='Please enter output directory name: '
+read, output, prompt='Please enter output directory name: '
 spawn,'mkdir '+output
 print,'Results will be in directory ',output
 
@@ -338,7 +338,7 @@ print,'Results will be in directory ',output
 BCG_stack_str = ['','Select the sample you want to stack:', 'all galaxies: 1', 'isolated centrals: 2',$ 
 						'group centrals: 3', 'all centrals: 4', 'satellites: 5', '']
 print, BCG_stack_str, FORMAT='(A)' 
-; read, BCG_stack ,prompt=''
+read, BCG_stack ,prompt=''
 print, ''
 
 ; selection added to use correct percentage ranks according to sat/cent/all designation
@@ -354,17 +354,18 @@ ENDIF
 CDFchoice_str = ['','Are you stacking using default cumulative distribution function (CDF) binning?',$
 					 '(Y/N)', '']
 print, CDFchoice_str, FORMAT='(A)' 
-; read, CDFchoice ,prompt=''
+read, CDFchoice ,prompt=''
 CDFchoice = strmid(strupcase(CDFchoice),0,1)
 
 IF CDFchoice EQ 'Y' THEN BEGIN
 	CDFstack_str = ['','Which CDF bins do you want to stack?', 'Mass-Metallicity: 1', 'Mass-SFR: 2',$ 
 						'Mass-sSFR: 3', '']
 	print, CDFstack_str, FORMAT='(A)' 
-	; read, CDFstack ,prompt=''
+	read, CDFstack ,prompt=''
 	goto, paramskip
 	print, ''
 ENDIF
+
 ; Select the parameters and set limits
 whatp1_str = ['','What is the first parameter? ',$
 				 'Stellar Mass: 1','NUV-r Colour: 2', $
@@ -382,6 +383,7 @@ whatp2_str = ['','What is the second parameter? ', 'Stellar Mass: 1',$
 print, whatp2_str, FORMAT='(A)'
 ylim = [-99., 99.]
 read,whatp2,prompt=''
+
 IF whatp2 LT 99 THEN read,ylim,prompt='Enter limits for parameter 2 (e.g. >>> -99,99): '
 print, ''
 
@@ -392,7 +394,7 @@ whatp3_str = ['','What is the second parameter? ', 'Stellar Mass: 1',$
 				 'redshift: 12','NONE: 99','']
 print, whatp3_str, FORMAT='(A)' 
 zlim = [-99., 99.]
-; read,whatp3,prompt=''
+read,whatp3,prompt=''
 IF whatp3 LT 99 THEN read,zlim,prompt='Enter limits for parameter 3 (e.g. >>> -99,99): ' 
 print, ''
 

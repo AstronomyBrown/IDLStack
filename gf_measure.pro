@@ -153,8 +153,8 @@ HIfreq=1420.405751786D
 lightsp=299792.458D
 deltaf=0.024414063
 
-xbin_no = 5
-ybin_no = 5
+xbin_tot = 5
+ybin_tot = 5
 ; read, xbin_no, prompt='How many structures do you want to restore? (i.e. no. of bins) '
 
 CDFchoice = 'N'
@@ -164,9 +164,9 @@ print, CDFchoice_str, FORMAT='(A)'
 read, CDFchoice ,prompt=''
 CDFchoice = strmid(strupcase(CDFchoice),0,1)
 
-for j=0,xbin_no-1 do begin
+for j=0,xbin_tot-1 do begin
     xbin_no = STRCOMPRESS((j + 1), /remove_all)
-    for k=0,xbin_no-1 do begin
+    for k=0,ybin_tot-1 do begin
     	
         ybin_no = STRCOMPRESS((k + 1), /remove_all)
         print, 'Beginning bin number ' +xbin_no+'-'+ybin_no

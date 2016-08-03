@@ -234,7 +234,7 @@ sy=3.8/(2.*sqrt(2*alog(2)))/60.
 ;;Define final arrays: 1024 chn, 1420MHz (v_0=V_syst) in chn 511.
 frqarr=restfrq+(findgen(nchn)-511)*deltaf ;frequency array
 path='/mnt/cluster/kilborn/tbrown/AA_project/SRCFILE/FULLSAMPLE/all/'
-sampledir = '/mnt/cluster/kilborn/tbrown/AA_project/SAMPLES/metallicity/'
+sampledir = '/mnt/cluster/kilborn/tbrown/AA_project/SAMPLES/environment/'
 listname = sampledir + filename
 
 data_tab_tot=mrdfits(listname,1)
@@ -258,6 +258,8 @@ ssfr_tot = data_tab_tot.MEDIAN_SSFR
 fapc_tot = data_tab_tot.fa_prank ; fixed aperture percentage rank
 nnpc_tot = data_tab_tot.nn7_prank ; nth Neighbour percentage rank
 mhpc_tot = data_tab_tot.mh_prank ; nth Neighbour percentage rank
+; cflag_tot = data_tab_tot.conf_flag ; 1 = not confused, >1 confused
+
 catch, error
 IF (error ne 0L) THEN BEGIN
     catch, /cancel
@@ -443,6 +445,7 @@ FOR j=0,N_ELEMENTS(low_lim)-1 DO BEGIN
 	    bin_cond = WHERE((param_1 ge low_lim[j]) AND (param_1 lt up_lim[j]) $
 	        AND (param_2 ge lim_ab[0]) AND (param_2 lt lim_ab[1]) $ ; 
 	        AND (param_3 ge lim_ii[0]) AND (param_3 lt lim_ii[1]) $
+	        ; AND (cflag_tot eq 1) $
 	        AND (ngal_tot eq 1))
 	    END
 	3: BEGIN ; centrals
@@ -458,6 +461,7 @@ FOR j=0,N_ELEMENTS(low_lim)-1 DO BEGIN
 	    bin_cond = WHERE((param_1 ge low_lim[j]) AND (param_1 lt up_lim[j]) $
 	        AND (param_2 ge lim_ab[0]) AND (param_2 lt lim_ab[1]) $ ; 
 	        AND (param_3 ge lim_ii[0]) AND (param_3 lt lim_ii[1]) $
+	        ; AND (cflag_tot eq 1) $
 	        AND (BCGflag_tot eq 1))
 	    END
 	5: BEGIN ; satellites

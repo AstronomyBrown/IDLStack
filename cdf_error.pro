@@ -175,68 +175,10 @@ filename = 'sample_master.fits'
 listname = sampledir + filename
 
 data_tab_tot=mrdfits(listname,1)
-; ndata_tot=N_ELEMENTS(data_tab_tot.ra)
-; ra_tot=data_tab_tot.ra
-; dec_tot=data_tab_tot.dec
 z_tot = data_tab_tot.z
 mass_tot=data_tab_tot.lgMst_median
 ID_tot=data_tab_tot.ID
-; IAU_tot=data_tab_tot.IAU
-; halo_tot=data_tab_tot.logMh_Mst
-; MUst_tot=data_tab_tot.mu_star
-; C_tot=data_tab_tot.C_idx
-; NUVR_tot=data_tab_tot.NUV_r
-; mass_hi_tot = data_tab_tot.log_MHI
-; detcode_tot = data_tab_tot.code ; 1 = det
-; BCGflag_tot = data_tab_tot.flag_mstar ; 1 = BGG, 2 = satelite
-; ngal_tot = data_tab_tot.Ngal ; number of galaxies in group
-; sfr_tot = data_tab_tot.MEDIAN_SFR
-; ssfr_tot = data_tab_tot.MEDIAN_SSFR 
-; fapc_tot = data_tab_tot.fa_prank ; fixed aperture percentage rank
-; nnpc_tot = data_tab_tot.nn7_prank ; nth Neighbour percentage rank
-; mhpc_tot = data_tab_tot.mh_prank ; nth Neighbour percentage rank
-; catch, error
-; IF (error ne 0L) THEN BEGIN
-;     catch, /cancel
-;     print, 'No Metallicities in input file'
-;     print, ''
-;     lgOH_12_tot = fltarr(n_elements(ra_tot))
-;     lgOH_12_tot[where(lgOH_12_tot[*] eq 0.)] = !Values.F_NAN
-;     goto, skipmetal
-; ENDIF
-; lgOH_12_tot = data_tab_tot.OH_MEDIAN_T04 ; log O/H + 12 metallicity, MPA cat.
-; skipmetal:
 
-
-; Select the parameter by which to rank spectra.
-
-; Index by which data is sorted.
-; sort_idx = sort(sort_param)
-; Randomise resample order if option 5 chosen
-; IF whatsort EQ 5 THEN sort_idx = SHUFFLE(sort_idx)
-
-; data_tab_sort = data_tab_tot[sort_idx]
-; ndata_sort = N_ELEMENTS(ra_tot[sort_idx])
-; ID_sort = ID_tot[sort_idx]
-; IAU_sort = IAU_tot[sort_idx]
-; ra_sort = ra_tot[sort_idx]
-; dec_sort = dec_tot[sort_idx]
-; z_sort = z_tot[sort_idx]
-; mass_sort = mass_tot[sort_idx]
-; nuvr_sort = NUVR_tot[sort_idx]
-; sfr_sort = sfr_tot[sort_idx]
-; ssfr_sort = ssfr_tot[sort_idx]
-; mhi_sort = mass_hi_tot[sort_idx]
-; MUst_sort = MUst_tot[sort_idx]
-; C_sort = C_tot[sort_idx]
-; code_sort = detcode_tot[sort_idx]
-; halo_sort = halo_tot[sort_idx]
-; BCG_sort = BCGflag_tot[sort_idx]
-; ngal_sort = ngal_tot[sort_idx]
-; fapc_sort = fapc_tot[sort_idx]
-; nnpc_sort = nnpc_tot[sort_idx]
-; mhpc_sort = mhpc_tot[sort_idx]
-; lgOH_12_sort = lgOH_12_tot[sort_idx]
 
 FOR fold=0,N_ELEMENTS(folders)-1 do begin
     
@@ -252,7 +194,7 @@ FOR fold=0,N_ELEMENTS(folders)-1 do begin
     FOR i=0,xbin_tot-1 do BEGIN
         
         xbin_no = STRCOMPRESS((i + 1), /remove_all)
-        print, 'test', xbin_no
+        ; print, 'test', xbin_no
 
         FOR j=0,ybin_tot-1 do BEGIN
 
@@ -282,10 +224,12 @@ FOR fold=0,N_ELEMENTS(folders)-1 do begin
 
             index=stack.hd.index
             IF stack.gf.totgf EQ 0 THEN BEGIN
-                PRINT, ''
-                PRINT, 'No gas fraction. Run gf_measure.pro!'
-                PRINT, ''
-                goto, EXITDAG
+                IF stack.MHI.totMHI EQ 0 THEN BEGIN
+                    PRINT, ''
+                    PRINT, 'No gas fraction. Run gf_measure.pro!'
+                    PRINT, ''
+                    goto, EXITDAG
+                ENDIF
             ENDIF
 
             IF stack.detflag EQ 0 THEN BEGIN
@@ -295,7 +239,7 @@ FOR fold=0,N_ELEMENTS(folders)-1 do begin
                 goto, nogalaxies
             ENDIF
             
-            ; parameters and limits
+            ; IDs of galaxies used in central stack.
             ID = stack.ID
            
             ndata = N_ELEMENTS(ID)
@@ -512,6 +456,7 @@ FOR fold=0,N_ELEMENTS(folders)-1 do begin
                     spec:spec, $              ;;to be filled later
                     red:red,$
                     rms:[rmsav,rmsbv,0.,0.],$
+                    rms_mhi:[0.,0.],$
                     rms_gf:[0.,0.],$
                     S:S,$
                     MHI:MHI,$
@@ -566,8 +511,8 @@ FOR fold=0,N_ELEMENTS(folders)-1 do begin
                 peakS=DOUBLE(max(spec[ch1:ch2]))
                 totSerr_sys=DOUBLE(0.)
                 totSerr_tot=DOUBLE(0.)
-                totSerr_sys= abs(totS- total(spec[chn1:chn2])*dv)/2. ; mJy km/s
-                totSerr_tot=SQRT(totSerr_S05^2+totSerr_sys^2)
+                ; totSerr_sys= abs(totS- total(spec[chn1:chn2])*dv)/2. ; mJy km/s
+                ; totSerr_tot=SQRT(totSerr_S05^2+totSerr_sys^2)
                 
                 smofac=W/(2.*dv_smo)       ; dv_smo= 10 km/s for ALFALFA, after han
                 IF (W gt 400.) THEN  smofac=400./(2.*dv_smo)
@@ -586,6 +531,7 @@ FOR fold=0,N_ELEMENTS(folders)-1 do begin
                         stack.sn.flx=stn[0:1]  
                     END
                     2: BEGIN                ;mhi
+                        ; help, stack
                         stack.MHI.totMHI=DOUBLE(2.356*10^4*10*totS/1000.) 
                         stack.MHI.totMHIerr=DOUBLE(2.356*10^4*10*totSerr_tot/1000.)
                         stack.spec.mhi=spec
@@ -666,8 +612,9 @@ FOR fold=0,N_ELEMENTS(folders)-1 do begin
             ;;Save results in original structure 
             RESTORE,output+'/'+output+'_bin_'+xbin_no+'-'+ybin_no+'.sav';, /RELAXED_STRUCTURE_ASSIGNMENT 
             
-            stack = MOD_STRUCT(stack,'resamp_GF', FLTARR(rep)) ; Modify the existing structure to change
-                                                              ; GF array length
+            stack = MOD_STRUCT(stack,'resamp_flx', FLTARR(rep)) ; Modify the existing structure to add input
+            stack = MOD_STRUCT(stack,'resamp_MHI', FLTARR(rep)) ; jackknifed flx, mhi or gf measurments                 
+            stack = MOD_STRUCT(stack,'resamp_GF', FLTARR(rep))
             
             PRINT, ''
             PRINT, ''
@@ -675,8 +622,8 @@ FOR fold=0,N_ELEMENTS(folders)-1 do begin
             print,'Original M_HI/M* ', stack.gf.totgf
             PRINT, ''
 
-            ;stack.jknife_flx=jknife_flx
-            ;stack.jknife_mhi=jknife_mhi
+            stack.resamp_flx=jknife_flx
+            stack.resamp_MHI=jknife_mhi
             stack.resamp_GF=jknife_gf
 
             spath = output+'/'+output+'_bin_'+xbin_no+'-'+ybin_no+'.sav'
@@ -688,7 +635,7 @@ FOR fold=0,N_ELEMENTS(folders)-1 do begin
             PRINTF, lun, '-------------------------------------------------'
             CASE stack.hd.input[2] of    ;which quantity has been stacked
                 1: PRINTF, lun,STDDEV(stack.resamp_GF),format="('jknife error +/- ',f6.2)"
-                2: PRINTF, lun,STDDEV(stack.resamp_GF),format="('jknife error +/- ',fe10.2)"
+                2: PRINTF, lun,STDDEV(stack.resamp_GF),format="('jknife error +/- ',f10.2)"
                 3: PRINTF, lun,STDDEV(stack.resamp_GF),format="('jknife error +/- ',f5.3)"
             ENDCASE
             PRINTF, lun,floor(0.8*nusedall),format="('Evaluated over stacking of ',i4,' galaxies')"

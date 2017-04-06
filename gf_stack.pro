@@ -62,7 +62,7 @@
 ;
 ; FUNCTIONS CALLED:
 ;
-;   freqshift - Shift spectra in Fourier space by taking first the FFT and then the inverse FFT in order
+;   freqshift - Shift spectra in frequency by taking first the FFT and then the inverse FFT in order
 ;              to centre the spectrum on the HI rest freq.
 ;
 ;   progbar - Create progress bar 
@@ -234,9 +234,10 @@ sy=3.8/(2.*sqrt(2*alog(2)))/60.
 ;;Define final arrays: 1024 chn, 1420MHz (v_0=V_syst) in chn 511.
 frqarr=restfrq+(findgen(nchn)-511)*deltaf ;frequency array
 path='/mnt/cluster/kilborn/tbrown/AA_project/SRCFILE/FULLSAMPLE/all/'
-sampledir = '/mnt/cluster/kilborn/tbrown/AA_project/SAMPLES/metallicity/'
+sampledir = '/mnt/cluster/kilborn/tbrown/AA_project/SAMPLES/galprop/'
 listname = sampledir + filename
 
+; read in standard columns from fits file
 data_tab_tot=mrdfits(listname,1)
 ndata_tot=N_ELEMENTS(data_tab_tot.ra)
 ra_tot=data_tab_tot.ra
@@ -245,41 +246,143 @@ z_tot = data_tab_tot.z
 mass_tot=data_tab_tot.lgMst_median
 ID_tot=data_tab_tot.ID
 IAU_tot=data_tab_tot.IAU
-halo_tot=data_tab_tot.logMh_Mst
+halo_tot=data_tab_tot.haloM_Mst
 MUst_tot=data_tab_tot.mu_star
 C_tot=data_tab_tot.C_idx
 NUVR_tot=data_tab_tot.NUV_r
+petroR50_r = data_tab_tot.petroR50_r
 mass_hi_tot = data_tab_tot.log_MHI
 detcode_tot = data_tab_tot.code ; 1 = det
-BCGflag_tot = data_tab_tot.flag_mstar ; 1 = BGG, 2 = satelite
+
+; Establish error handler. When errors occur, the index of the
+; error is returned in the variable Error_status:
+CATCH,/CANCEL
+CATCH, Error_status
+
+
+;This statement begins the error handler:
+IF Error_status NE 0 THEN BEGIN
+	PRINT, 'Error index: ', Error_status
+	PRINT, 'Error message: ', !ERROR_STATE.MSG
+	PRINT, 'Columns are missing from file.'
+	CATCH, /CANCEL
+	; Handle the error:
+	ngal_tot = fltarr(n_elements(ra_tot))
+	BCGflag_tot = fltarr(n_elements(ra_tot))
+	sfr_tot_mpa_tot = fltarr(n_elements(ra_tot))
+	sfr_fib_mpa_tot = fltarr(n_elements(ra_tot))
+	sfr_tot_Ha_tot = fltarr(n_elements(ra_tot))
+	sfr_tot_SED_tot = fltarr(n_elements(ra_tot))
+	ssfr_tot = fltarr(n_elements(ra_tot))
+	fapc_tot = fltarr(n_elements(ra_tot))
+	nnpc_tot = fltarr(n_elements(ra_tot))
+	mhpc_tot = fltarr(n_elements(ra_tot))
+	iclass_tot = fltarr(n_elements(ra_tot))
+	goto, skipread
+ENDIF
+
+; Read in Environment, SF data etc and catch errors if no cols.
+BCGflag_tot = data_tab_tot.rank_M ; 1 = BGG, 2 = satelite
 ngal_tot = data_tab_tot.Ngal ; number of galaxies in group
-sfr_tot = data_tab_tot.MEDIAN_SFR
-ssfr_tot = data_tab_tot.MEDIAN_SSFR 
+sfr_tot_mpa_tot = data_tab_tot.SFR_MEDIAN_tot ; Aperture orrected MPA sfr
+sfr_fib_mpa_tot = data_tab_tot.SFR_MEDIAN_fib ; Fiber MPA sfr
+sfr_tot_Ha_tot = data_tab_tot.SFR_K98 ; Halpha (kennicutt 1998)
+sfr_tot_SED_tot = data_tab_tot.logSFR_SED_S16 ; salim optical/UV
+ssfr_tot = data_tab_tot.sSFR_MEDIAN_tot ;
 fapc_tot = data_tab_tot.fa_prank ; fixed aperture percentage rank
 nnpc_tot = data_tab_tot.nn7_prank ; nth Neighbour percentage rank
 mhpc_tot = data_tab_tot.mh_prank ; nth Neighbour percentage rank
+iclass_tot = data_tab_tot.I_CLASS
 
-print,'Total no. input objects:',ndata_tot
 
+skipread:
+
+print,'Total no. input objects:', ndata_tot
+
+
+;  Calculate covering fraction of fibre. See Bothwell+13 & Kewley+05
+fib_diameter = 3 ; diameter of SDSS fiber [arcsec]
+
+; small angle approx
+fib_diam_kpc = (fib_diameter * lumdist(z_tot,/silent)*1000)/206265 ; Mpc->kpc arcsec->radian
+
+fib_area = !PI * (fib_diam_kpc/2)^2
+gal_area = !PI * petroR50_r^2
+
+
+; g-r
+gr_tot = data_tab_tot.modelMag_g - data_tab_tot.modelMag_r
+
+; select the SFR estimate
+sfrstack_str = ['','Choose SFR estimate...','... MPA total [B04] (1), SED integrated [S16] (2), Halpha SFRs [K98] (3)?', '']
+print, sfrstack_str, FORMAT='(A)' 
+read, sfrstack ,prompt=''
+
+CASE sfrstack OF
+	1: sfr_tot = sfr_tot_mpa_tot
+	2: sfr_tot = sfr_tot_SED_tot
+	3: sfr_tot = sfr_tot_Ha_tot
+ENDCASE
+
+; Ask user for options if keyword set
+lgOHstack_str = ['','Choose Zgas calibration...','... None (1), Zgas [M08] (2), Zgas [T04] (3), Zgas [K08] (4)?', '']
+print, lgOHstack_str, FORMAT='(A)' 
+read, lgOHstack ,prompt=''
+
+CATCH, /cancel
 CATCH, ERROR
+
 IF (ERROR ne 0L) THEN BEGIN
-    catch, /cancel
+    CATCH, /cancel
     print, 'No Metallicities in input file'
     print, ''
     lgOH_12_tot = fltarr(n_elements(ra_tot))
     lgOH_12_tot[where(lgOH_12_tot[*] eq 0.)] = !Values.F_NAN
     goto, skipmetal
 ENDIF
-lgOH_12_tot = data_tab_tot.OH_MEDIAN_T04 ; log O/H + 12 metallicity, MPA cat.
+
+IF lgOHstack EQ 1 THEN BEGIN
+    lgOH_12_tot = fltarr(n_elements(ra_tot))
+    lgOH_12_tot[where(lgOH_12_tot[*] eq 0.)] = !Values.F_NAN
+ENDIF
+
+; assign different Z calibrations
+CASE lgOHstack OF
+	1: BEGIN
+		print, 'No Metallicities used'
+	    print, ''
+		lgOH_12_tot = fltarr(n_elements(ra_tot))
+		lgOH_12_tot[where(lgOH_12_tot[*] eq 0.)] = !Values.F_NAN
+	END
+	2: lgOH_12_tot = data_tab_tot.lgOH_M10
+	3: lgOH_12_tot = data_tab_tot.lgOH_MEDIAN_T04
+	4: lgOH_12_tot = data_tab_tot.lgOH_K08
+ENDCASE
+
+zgas_M08_tot = data_tab_tot.lgOH_M10
+zgas_T04_tot = data_tab_tot.lgOH_MEDIAN_T04
+
 CATCH, /CANCEL
 
-;; Ask user for options if keyword set
+IF lgOHstack GE 2 THEN BEGIN
 
-read,lgOHstack,prompt='Do you want to stack: full sample (1) or T04 metallicity (2) sample?  '
+	print, 'Selecting galaxies w/ mstar <= 10^11 and valid Zgas and SFR calibrations.'
 
-IF lgOHstack EQ 2 THEN BEGIN
+	rad_covfrac = (fib_area/gal_area) *100
+	print, 'No. galaxies w/ fibre covering > 20% area:', N_ELEMENTS(rad_covfrac[WHERE(rad_covfrac GE 20)])
 
-	valid_metal = WHERE(lgOH_12_tot GT 0.)
+	sfr_covfrac = (10^sfr_fib_mpa_tot/10^sfr_tot_mpa_tot) *100
+	print, 'No. galaxies w/ fibre picking up > 20% SF:',N_ELEMENTS(sfr_covfrac[WHERE(sfr_covfrac GE 20)])
+
+	valid_metal = WHERE((zgas_M08_tot GT 0.) AND $
+						(zgas_T04_tot GT 0.) AND $
+						(sfr_tot_mpa_tot GT -99) AND $
+						(sfr_tot_Ha_tot GT -99) AND $
+						(sfr_tot_SED_tot GT -99) AND $
+						; (rad_covfrac GE 20) AND $
+						; (sfr_covfrac GE 20) AND $
+						(mass_tot LE 11.))
+
 	ra_tot = ra_tot[valid_metal]
 	dec_tot = dec_tot[valid_metal]
 	z_tot = z_tot[valid_metal]
@@ -296,32 +399,35 @@ IF lgOHstack EQ 2 THEN BEGIN
 	ngal_tot = ngal_tot[valid_metal]
 	sfr_tot = sfr_tot[valid_metal]
 	ssfr_tot = ssfr_tot[valid_metal]
+
+	sfr_tot_mpa_tot = sfr_tot_mpa_tot[valid_metal]
+	sfr_fib_mpa_tot = sfr_fib_mpa_tot[valid_metal]
+	sfr_tot_Ha_tot = sfr_tot_Ha_tot[valid_metal]
+	sfr_tot_SED_tot = sfr_tot_SED_tot[valid_metal]
+
 	fapc_tot = fapc_tot[valid_metal]
 	nnpc_tot = nnpc_tot[valid_metal]
 	mhpc_tot = mhpc_tot[valid_metal]
 	lgOH_12_tot = lgOH_12_tot[valid_metal]
-
 	print,'No. objects:',N_ELEMENTS(ra_tot)
 ENDIF
-
 
 skipmetal:
 ; (log M*)/(log Mh) baryon -> star efficiency
 ; ms_mh_tot = mass_tot/halo_tot
 
-
 ; default settings
-whatstack=3 ; set default to gas fractions
+whatstack=1 ; set default to gas fractions
 output = 'test' ; directory
 BCG_stack = 1
-CDFchoice = 'Y'
+CDFchoice = 'N'
 CDFstack = 3
-whatp1 = 99
+whatp1 = 1
 whatp2 = 99
 whatp3 = 99
 
 ;; Ask user for options if keyword set
-IF KEYWORD_SET(stackq) THEN read,whatstack,prompt='Do you want to stack: fluxes (1), M_HI (2) or gas fractions = M_HI/M_* (3, default)?  '
+read,whatstack,prompt='Do you want to stack: fluxes (1), M_HI (2) or gas fractions = M_HI/M_* (3, default)?  '
 
 ;;Correct for beam confusion? No
 confcorrection='n' ; set default to no correction for beam confusion
@@ -351,7 +457,7 @@ IF BCG_stack EQ 5 THEN BEGIN
 	PRINT, ''
 ENDIF
 
-CDFchoice_str = ['','Are you stacking using default cumulative distribution function (CDF) binning?',$
+CDFchoice_str = ['','Are you stacking using cumulative distribution function (CDF) binning?',$
 					 '(Y/N)', '']
 print, CDFchoice_str, FORMAT='(A)' 
 read, CDFchoice ,prompt=''
@@ -362,19 +468,19 @@ IF CDFchoice EQ 'Y' THEN BEGIN
 						'Mass-sSFR: 3', '']
 	print, CDFstack_str, FORMAT='(A)' 
 	read, CDFstack ,prompt=''
+
 	goto, paramskip
-	print, ''
 ENDIF
 
 ; Select the parameters and set limits
 whatp1_str = ['','What is the first parameter? ',$
-				 'Stellar Mass: 1','NUV-r Colour: 2', $
+				 'Stellar Mass: 1','NUV-r Ccolour: 2', $
 				 	'Stellar Density: 3', 'Halo Mass: 4', $
-				 		'SSFR: 5', 'Metalicity: 6', '']
+				 		'SSFR: 5', 'Metalicity: 6','g-r Colour: 7', '']
 print, whatp1_str, FORMAT='(A)' 
 read,whatp1,prompt=''
-print, ''
 
+print, ''
 whatp2_str = ['','What is the second parameter? ', 'Stellar Mass: 1',$
 				 'NUV-r Colour: 2', 'Stellar Density: 3', 'Halo Mass: 4',$
 				 'SFR: 5','sSFR: 6', 'Fixed Ap p-rank: 7', 'Nth Neighbour p-rank: 8',$
@@ -386,8 +492,7 @@ read,whatp2,prompt=''
 
 IF whatp2 LT 99 THEN read,ylim,prompt='Enter limits for parameter 2 (e.g. >>> -99,99): '
 print, ''
-
-whatp3_str = ['','What is the second parameter? ', 'Stellar Mass: 1',$
+whatp3_str = ['','What is the third parameter? ', 'Stellar Mass: 1',$
 				 'NUV-r Colour: 2', 'Stellar Density: 3', 'Halo Mass: 4',$
 				 'SFR: 5','sSFR: 6', 'Fixed Ap p-rank: 7', 'Nth Neighbour p-rank: 8',$
 				 'Halo Mass p-rank: 9', 'Group Ngal: 10', 'Metalicity: 11', $
@@ -397,6 +502,8 @@ zlim = [-99., 99.]
 read,whatp3,prompt=''
 IF whatp3 LT 99 THEN read,zlim,prompt='Enter limits for parameter 3 (e.g. >>> -99,99): ' 
 print, ''
+
+
 
 ;; Default binning
 CASE whatp1 OF
@@ -429,40 +536,99 @@ CASE whatp1 OF
 	6: BEGIN
 		xlim = [7.0, 8.5, 8.8, 9.1, 10.]
 	END	
+	7: BEGIN
+		xlim = [0, 0.3, 0.5, 0.7, 1.]
+	END	
 ENDCASE
 
 paramskip:
 IF CDFchoice EQ 'N' THEN goto, CDFskip
 
-xlim = [9.0001001, 9.2849998, 9.5586004, 10.0143, 10.455, 11.3904]
 zlim = [-99., 99.]
 whatp1 = 1
 whatp3 = 99
 
+; define the x/y limits for each different mass-metallicity sample
 CASE CDFstack OF
 	1: BEGIN
-	whatp2 = 11
-	ylim = [[7.8517404, 8.3555813, 8.5795593, 8.6971941, 8.8683567, 9.1593418],$
-			[7.9553475, 8.5359583, 8.7022781, 8.8282986, 8.9891253, 9.1287031],$
-			[8.217041, 8.6651611, 8.8460588, 8.9820194, 9.090579, 9.3092136],$
-			[8.4183912, 8.8465328, 9.0033064, 9.0896778, 9.1634121, 9.3099995],$
-			[8.2816458, 8.9561119, 9.0910597, 9.1488991, 9.2315474, 9.3099995]]
+		whatp2 = 11
+		CASE lgOHstack OF
+			2: BEGIN ; limits for m-zgas [M08] relation
+			xlim = [9.0, 9.3, 9.6, 10, 10.4, 11]
+			ylim =[[8.4092688749235958, 8.5737211782833356, 8.6818920322749165, 8.7848300813178195, 8.8929629390400038, 9.1099870530120288] ,$
+			[8.4348296863000432, 8.6784551908913787, 8.7894873840321246, 8.8924749886968257, 8.9802511345022076, 9.1074988901350959] ,$
+			[8.4826806241102872, 8.7691858311456201, 8.8899629056493588, 8.9883090934432381, 9.0553751559992328, 9.1449120750131527] ,$
+			[8.7100812565417201, 8.9065428771823782, 8.9951609552070018, 9.0555079030851751, 9.1007224265392317, 9.1605775309504409] ,$
+			[8.5625675346990953, 8.9739334167908673, 9.0449542234492846, 9.0886060353639309, 9.1260829646277024, 9.1571708880870162]]
+
+			; limits for SFR cov frac > 20
+			; ylim = [[8.4170414372793605, 8.5633389801529987, 8.68661195622904, 8.8105353236128323, 8.9293152472865636, 9.1099870530120288] ,$
+			; 		[8.4348296863000432, 8.6693149316141529, 8.786336451871481, 8.9043729732367183, 9.0047003676844959, 9.1074988901350959] ,$
+			; 		[8.4826806241102872, 8.7527943629037459, 8.8907291210269221, 9.0014960219987366, 9.0641337608206634, 9.1449120750131527] ,$
+			; 		[8.7186585109257244, 8.9070388500709416, 9.0006175585309371, 9.0599679605760137, 9.1038029899935182, 9.1605775309504409] ,$
+			; 		[8.6591645102069386, 8.9820848049195732, 9.046125170665146, 9.093029413608436, 9.1266587522698064, 9.1553431112006578]]
+
+
+			; limits for fiber area cov frac > 20
+			; ylim = [[8.4219507163816338, 8.5707111015694117, 8.6685797150220267,$
+			; 		8.7803441920386085, 8.9076393985201996, 9.0549903010800534], $
+			; 		[8.4348296863000432, 8.6687872320984276, 8.777990817904028, $
+			; 		8.8877534750591529, 8.9786175491134745, 9.0846342917487668], $
+			; 		[8.4826806241102872, 8.7347720975592154, 8.8561528810588186, $
+			; 		8.9541493960884786, 9.0318412350177084, 9.129597443137067], $
+			; 		[8.5230485528273938, 8.8361408270697055, 8.9541209476110843, $
+			; 		9.0298567782057866, 9.0840807641831027, 9.1449120750131527], $
+			; 		[8.5676357574925799, 8.9401824738092319, 9.0225856564501328, $
+			; 		9.0738371263244773, 9.1057764501726588, 9.1460890271606523]]
+			END
+			3: BEGIN ; m-zgas [T04] relation 
+			xlim = [9.0, 9.3, 9.6, 10, 10.4, 11]
+			ylim = [[8.0867977, 8.3800726, 8.5796337, 8.7019224, 8.8500557, 9.146286] ,$
+        			[8.1776953, 8.5833969, 8.7093592, 8.8409128, 8.9717121, 9.1298733] ,$
+        			[8.217041, 8.7044582, 8.8495579, 8.9847088, 9.0703869, 9.2397232] ,$
+        			[8.5414867, 8.8721428, 8.9900637, 9.0736771, 9.1344156, 9.2603416] ,$
+        			[8.2816458, 8.9722633, 9.0838346, 9.1447086, 9.2247887, 9.2691278]]
+			
+			; limits for SFR cov frac > 20
+			; ylim = [[8.0867977, 8.4348116, 8.6188116, 8.7487249, 8.9253302, 9.146286] ,$
+			; 		[8.1776953, 8.5926809, 8.7174253, 8.8690338, 8.9989262, 9.1298733] ,$
+			; 		[8.217041, 8.6979628, 8.8563671, 8.994647, 9.0899525, 9.2397232] ,$
+			; 		[8.5860949, 8.9007568, 8.9982414, 9.0878258, 9.1453476, 9.2603416] ,$
+			; 		[8.5221071, 8.9835539, 9.0910482, 9.1465158, 9.2261906, 9.2691278]]
+
+
+			; limits for fiber area cov frac > 20
+			; ylim = [[8.1451693, 8.4201632, 8.6016226, 8.7263584, 8.8728056, 9.0737762],$
+			; 	    [8.2056332, 8.6012831, 8.7121153, 8.8517761, 8.9759264, 9.1139183],$
+			; 	    [8.3948317, 8.679594, 8.8132277, 8.9463758, 9.0500526, 9.1758165],$
+			; 	    [8.2886534, 8.7960463, 8.9453945, 9.0449715, 9.109273, 9.2397232],$
+			; 	    [8.4183912, 8.918416, 9.0082893, 9.1100359, 9.1500053, 9.2393742]]
+			END
+			4: BEGIN ; m-zgas [KD02] relation 
+			xlim = [9.0, 9.3, 9.6, 10, 10.4, 11]
+			ylim = [[8.2165403, 8.5046501, 8.6398296, 8.7656202, 8.9055901, 9.1013098], $
+					[8.2537699, 8.6141195, 8.7331495, 8.85254, 8.9658604, 9.1883698], $
+					[8.2853899, 8.6922998, 8.8145704, 8.93011, 9.03125, 9.1692104], $
+					[8.4828796, 8.7858496, 8.9232903, 9.0223904, 9.1223001, 9.2600603], $
+					[8.4716702, 8.8895702, 9.02948, 9.1094103, 9.1788397, 9.2289896]]
+			END
+		ENDCASE
 	END
 	2: BEGIN
 	whatp2 = 5
-	ylim = [[-2.3935895, -1.1141304, -0.60889322, -0.38187835, -0.10649344, 0.43563241],$
-			[-2.3204467, -0.91997862, -0.47876704, -0.24858695, 0.02762159, 0.95069063],$
-			[-2.3260891, -0.82003331, -0.29585177, -0.047595881, 0.23803426, 1.2275001],$
-			[-1.9641527, -0.4951247, -0.027307536, 0.23015195, 0.56418836, 1.3737562],$
-			[-1.8785964, -0.23025744, 0.2563177, 0.55092418, 0.89882821, 1.4163351]]
+	ylim = [[-2.3935895, -1.0198947, -0.63261318, -0.37617978, -0.13608791, 0.43563241],$
+			[-2.3204467, -0.84299988, -0.50093168, -0.24279277, -0.00052105653, 0.95069063],$
+			[-2.3260891, -0.7591666, -0.33963716, -0.064185165, 0.178406, 1.0450674],$
+			[-1.9641527, -0.48807943, -0.096372128, 0.19783889, 0.47380397, 1.3737562],$
+			[-1.8785964, -0.14886373, 0.22740397, 0.56452155, 0.86913043, 1.4163351]]	
 	END
 	3: BEGIN
 	whatp2 = 6
-	ylim = [[-11.478507, -10.314604, -9.8320446, -9.5859375, -9.3076916, -8.7876368],$
-			[-11.84898, -10.402778, -9.9624701, -9.7282314, -9.4568176, -8.5930595],$
-			[-12.023958, -10.650709, -10.127298, -9.8725386, -9.574542, -8.7592964],$
-			[-12.155935, -10.737983, -10.288836, -10.022985, -9.7140789, -9.0466337],$
-			[-12.900444, -10.96002, -10.436883, -10.149607, -9.7765598, -9.1551046]]
+	ylim = [[-11.478507, -10.210714, -9.8387842, -9.5769396, -9.3557148, -8.7876368],$
+			[-11.84898,  -10.317434, -9.9709435, -9.7209301, -9.488842, -8.5930595],$
+			[-12.023958, -10.556909, -10.117835, -9.8408823, -9.6037712, -8.7592964],$
+			[-12.155935, -10.678195, -10.277184, -9.9942894, -9.7516584, -8.8394737],$
+			[-12.900444, -10.838449, -10.446731, -10.139709, -9.8286524, -9.1551046]]
 	END
 ENDCASE
 CDFskip:
@@ -480,6 +646,7 @@ FOR j=0,N_ELEMENTS(xlim)-2 DO BEGIN
 	    4: param_1 = halo_tot
 	    5: param_1 = ssfr_tot
    	    6: param_1 = lgOH_12_tot
+   	    7: param_1 = gr_tot
     ENDCASE
     
     CASE whatp2 OF
@@ -520,11 +687,20 @@ FOR j=0,N_ELEMENTS(xlim)-2 DO BEGIN
 	;; upper and lower limit condition on bins
 	CASE BCG_stack OF
 	1: BEGIN
-	    bin_cond = WHERE((param_1 ge xlim[j]) AND (param_1 lt xlim[j+1]) $
-	        AND (param_2 ge ylim[k,j]) AND (param_2 lt ylim[k+1,j]) $ ; 
-	        AND (param_3 ge zlim[0]) AND (param_3 lt zlim[1]))
-	        ; AND (detcode_tot eq 1)
-	    END
+		IF CDFchoice EQ 'N' THEN BEGIN
+		    bin_cond = WHERE((param_1 ge xlim[j]) AND (param_1 lt xlim[j+1]) $
+		        AND (param_2 ge ylim[k]) AND (param_2 lt ylim[k+1]) $ ; 
+		        AND (param_3 ge zlim[0]) AND (param_3 lt zlim[1]))
+		        ; AND (detcode_tot eq 1)
+		ENDIF
+		IF CDFchoice EQ 'Y' THEN BEGIN
+		    bin_cond = WHERE((param_1 ge xlim[j]) AND (param_1 lt xlim[j+1]) $
+		        AND (param_2 ge ylim[k,j]) AND (param_2 lt ylim[k+1,j]) $ ; 
+		        AND (param_3 ge zlim[0]) AND (param_3 lt zlim[1]))
+		        ; AND (detcode_tot eq 1)
+		ENDIF
+		END
+
 
 	2: BEGIN ; isolated
 		PRINT, 'stacking isolated central galaxies (Ngal=1 & bcgflag=1)'
@@ -572,6 +748,7 @@ FOR j=0,N_ELEMENTS(xlim)-2 DO BEGIN
 	mu_st = MUst_tot[bin_cond]
 	C = C_tot[bin_cond]
 	NUVR = NUVR_tot[bin_cond]
+	gr = gr_tot[bin_cond]
 	sfr = sfr_tot[bin_cond]
 	ssfr = ssfr_tot[bin_cond]
 	halo = halo_tot[bin_cond]
@@ -581,6 +758,10 @@ FOR j=0,N_ELEMENTS(xlim)-2 DO BEGIN
 	fapc = fapc_tot[bin_cond]
 	nnpc = nnpc_tot[bin_cond]
 	lgOH_12 = lgOH_12_tot[bin_cond]
+	sfr_tot_mpa = sfr_tot_mpa_tot[bin_cond]
+	sfr_fib_mpa = sfr_fib_mpa_tot[bin_cond]
+	sfr_tot_Ha = sfr_tot_Ha_tot[bin_cond]
+	sfr_tot_SED = sfr_tot_SED_tot[bin_cond]
 
 
 	print, 'There are' + STRCOMPRESS(ndata) + ' galaxies in bin ' + xbin_no + '-' + ybin_no
@@ -635,13 +816,20 @@ FOR j=0,N_ELEMENTS(xlim)-2 DO BEGIN
 	mean_mu = MEAN(mu_st)
 	mean_c = MEAN(C)
 	mean_nuvr = MEAN(NUVR)
-	mean_sfr = MEAN(sfr)
-	mean_ssfr = MEAN(ssfr)
+	mean_nuvr = MEAN(gr)
+	mean_sfr = ALOG10(MEAN(10^sfr))
+	mean_ssfr = ALOG10(MEAN(10^ssfr))
 	mean_aahi = MEAN(aamass_hi)
 	mean_fapc = MEAN(fapc)
 	mean_nnpc = MEAN(nnpc)
-	mean_logOH = MEAN(lgOH_12)
 	mean_ngal = MEAN(ngal)
+	mean_logOH = MEAN(lgOH_12)
+	mean_sfr_tot_mpa = ALOG10(MEAN(10^sfr_tot_mpa))
+	mean_sfr_fib_mpa = ALOG10(MEAN(10^sfr_fib_mpa))
+	mean_sfr_fib_Ha = ALOG10(MEAN(10^sfr_tot_Ha))
+	mean_sfr_SED = ALOG10(MEAN(10^sfr_tot_SED))
+
+	;print, mean_sfr_tot_mpa, mean_sfr_fib_Ha, mean_sfr_SED
 
 	; take median where appropriate
 	median_z = MEDIAN(z_arr)
@@ -649,7 +837,7 @@ FOR j=0,N_ELEMENTS(xlim)-2 DO BEGIN
 	median_ngal = MEDIAN(ngal)
 
 	; and mode
-	MODE, bcgflag, mode_bcgflag
+	; MODE, bcgflag, mode_bcgflag
 
 
 
@@ -660,7 +848,9 @@ FOR j=0,N_ELEMENTS(xlim)-2 DO BEGIN
 	    4: mean_x = MEAN(halo)
 	    5: mean_x = MEAN(ssfr)
 	    6: mean_x = MEAN(lgOH_12)
+	    7: mean_x = MEAN(gr)
     ENDCASE
+		
 
 	; IF ndata GT 1000 then ndata = 1000
 	FOR all=0L,(ndata-1) DO BEGIN
@@ -779,17 +969,10 @@ FOR j=0,N_ELEMENTS(xlim)-2 DO BEGIN
 		endif
 
 		IF KEYWORD_SET(plot) THEN BEGIN
-
 			plot, frqarr, (spec_outA+spec_outB)/2,$
 		       YRANGE=[MIN((spec_outA+spec_outB)/2), 1.2*MAX((spec_outA+spec_outB)/2)],$
 		           XRANGE=[MIN(frqarr), MAX(frqarr)], Title= 'spec ID:'+ID[all],$
 		           	XTITLE = STRCOMPRESS(ID[all])
-
-		    ; plot, frqarr, (stack_specA+stack_specB)/2,$
-		    ;    YRANGE=[ -MAX((stack_specA+stack_specB)/2)/2, MAX((stack_specA+stack_specB)/2)], $
-		    ;        XRANGE=[MIN(frqarr), MAX(frqarr)], Title= STRCOMPRESS(all),$
-		    ;        	XTITLE = STRCOMPRESS(ID[all])
-		
 		ENDIF
 		
 		rms_A_vec[nn]=rms_A
@@ -798,7 +981,7 @@ FOR j=0,N_ELEMENTS(xlim)-2 DO BEGIN
 		rmstotB=rmstotB+1/(rms_B^2)
 		z_vec[nn]=zspec[0]
 		mst_vec[nn]=mass[all]
-		
+
 		indx[nn]=all
 		nn=nn+1
 		;;count how many detection or non detection you have
@@ -1017,13 +1200,16 @@ FOR j=0,N_ELEMENTS(xlim)-2 DO BEGIN
 			zlim:zlim,$
 			mean_binp:[mean_ms, mean_mh, mean_z, mean_mu, mean_c, mean_nuvr,$
 						mean_sfr, mean_ssfr, mean_aahi, mean_fapc, mean_nnpc,$
-						 	mean_logOH, mean_ngal],$ 
+						 	mean_logOH, mean_ngal,mean_sfr_tot_mpa,$
+								mean_sfr_fib_Ha,mean_sfr_SED,mean_sfr_fib_mpa],$ 
+
 			median_binp:[median_z, median_logOH, median_ngal],$ ; avg bin properties
-			mode_bcgflag:mode_bcgflag, $
+			;mode_bcgflag:mode_bcgflag, $
 			mean_x:mean_x,$ ; avg x-axis value per bin
 			detflag:[1], $ ; flag if stack is detection (1) or non-detections (0), default detection, changed in HI_measure
 			c_factor:[sconf_up,sconf]} ;flux confusion factor
-	save,stack,file=sname		
+	save,stack,file=sname
+
 	print,' '
 	close, lun
 	nogalaxies:

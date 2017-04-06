@@ -114,12 +114,17 @@ pro f_bmask,bmask,nchn
 end
 
 ;;Fit baseline
-pro b_fit,bmask,nchn,norder
-   get_order:
-  print,'Enter poly order:'
-  read_norder:
-  read, norder
-  if (norder gt 11) then begin
+pro b_fit,bmask,nchn,norder,CDFchoice,ansb
+    IF (CDFchoice EQ 'Y') AND (ansb EQ 'y') THEN BEGIN
+        print,'Choosing 2nd order polynomial'
+        norder = 2
+    ENDIF ELSE BEGIN  
+        get_order:
+        print,'Enter poly order:'
+        read_norder:
+        read, norder
+    ENDELSE
+    if (norder gt 11) then begin
     print,'Fit order =',norder,' is a bit extreme; enter value <12'
     goto, read_norder
   endif
@@ -213,6 +218,7 @@ for j=0,xbin_tot-1 do begin
         nused=stack.nused[0]
         nchn=N_ELEMENTS(speca)
         xarr=findgen(nchn)
+        ; The blue-shift equation for velocity is: vrad/c=(1 - f0/f)=z/(1+z)
         velarr=lightsp*(HIfreq/(HIfreq+deltaf*(511-xarr))-1)
         bmask=intarr(nchn)
         maskA=intarr(nchn)
@@ -224,7 +230,7 @@ for j=0,xbin_tot-1 do begin
         case stack.hd.input[2] of    ;which quantity has been stacked
             1: yt=textoidl('mJy\cdot (km/s)^2')
             2: yt=textoidl('mJy\cdot (km/s)^2 Mpc^2') 
-            3: yt=textoidl('mJy\cdot (km/s)^2 Mpc^2 / M_sol') 
+            3: yt=textoidl('mJy\cdot (km/s)^2 Mpc^2 / M_{sol}') 
         endcase
         ;;PO3A
         !P.MULTI = [0, 1, 2]
@@ -303,14 +309,14 @@ for j=0,xbin_tot-1 do begin
         print, 'BASELINE FITTING'
         print,''
         f_bmask,bmask,nchn
-        b_fit,bmask,nchn,norder
+        ansb='y'
+        b_fit,bmask,nchn,norder,CDFchoice,ansb
         indb=where(bmask eq 1)
         fit_base:
         bcoef=poly_fit(xarr[indb],specnew[indb],norder)
         yfit=poly(xarr,bcoef)
         basecoef[0:norder]=bcoef
         oplot,yfit
-        ansb='y'
         read,ansb,prompt='Baseline OK? [Y/n]'
         if (ansb eq '') then ansb='y'
         ansb=strmid(strlowcase(ansb),0,1)
@@ -318,7 +324,7 @@ for j=0,xbin_tot-1 do begin
             plot,specnew,ytitle=yt,charsize = 3
             oplot,[511,511],[a,b], linestyle=2
             oplot,fltarr(nchn),linestyle=1
-            b_fit,bmask,nchn,norder
+            b_fit,bmask,nchn,norder,CDFchoice,ansb
             indb=where(bmask eq 1)
             goto,fit_base
         endif
@@ -328,14 +334,18 @@ for j=0,xbin_tot-1 do begin
         oplot,fltarr(nchn),linestyle=1
 
         rms= stddev(spec[indb])
-        
+
         ;;----------------------------------------
-        ;; Check if the stack is a non detection
+        ; Check if the stack is a non detection
         ; Evaluate the signal of non-detection (300 km/s ms > 10^10Msol; 200km/s ms <= 10^10Msol) using rms value
         detflag='y'
         detflag_n=1
-        read, detflag, prompt='Is the stack a detection? [Y/N] '
-        print, ''
+        IF (CDFchoice EQ 'Y') THEN BEGIN
+            detflag = 'y'
+        ENDIF ELSE BEGIN  
+            read, detflag, prompt='Is the stack a detection? [Y/N] '
+            print, ''
+        ENDELSE
         if (detflag eq '') then detflag='y'
         detflag=strmid(strlowcase(detflag),0,1)
 
@@ -344,8 +354,7 @@ for j=0,xbin_tot-1 do begin
             totSerr_tot = 0
             TOTSERR_SYS = 0
             detflag_n=0
-            ; print, 'rms = ', rms
-            ;;MEASURE Signal upper limit
+            ; MEASURE Signal upper limit
             w=300. ;; set velocity width 300 km/s for ms > 10^10Msol; 200km/s for ms <= 10^10Msol
             mean_ms = stack.MEAN_BINP[0]
             IF (mean_ms le 10) then w = 200.
@@ -449,19 +458,19 @@ for j=0,xbin_tot-1 do begin
         ; SYSTEMATIC ERROR CAUSED BY CHOICE OF SIGNAL BOUNDARIES
         totSerr_sys=double(0.)
         totSerr_tot=double(0.)
-        print, "Estimate systematic errors caused by choice of signal boundaries "
-        print,'Flag new boundary edges: '
-        print, 'Left click LEFT edge '
-        cp, x=x, y=y
-        chn1=x
-        wait,0.5
-        print, 'Left click RIGHT edge '
-        cp, x=x, y=y
+        ; print, "Estimate systematic errors caused by choice of signal boundaries "
+        ; print,'Flag new boundary edges: '
+        ; print, 'Left click LEFT edge '
+        ; cp, x=x, y=y
+        chn1=-1
+        ; wait,0.5
+        ; print, 'Left click RIGHT edge '
+        ; cp, x=x, y=y
         chn2=x
-        flag,[chn1,chn2], linestyle=1
+        ; flag,[chn1,chn2], linestyle=1
         wait,0.5
-        totSerr_sys= abs(totS- total(spec[chn1:chn2])*dv)/2. ; mJy km/s
-        totSerr_tot=sqrt(totSerr_S05^2+totSerr_sys^2)
+        ; totSerr_sys= abs(totS- total(spec[chn1:chn2])*dv)/2. ; mJy km/s
+        ; totSerr_tot=sqrt(totSerr_S05^2+totSerr_sys^2)
         
         exitmeasure: 
         smofac=W/(2.*dv_smo)            ; dv_smo= 10 km/s for ALFALFA, after han
@@ -543,7 +552,7 @@ for j=0,xbin_tot-1 do begin
         printf, lun,norder,format="('Baseline pol:  ',i2)"
         printf, lun,smo,format="('Boxcar smoothing:  ',i2)"
         printf, lun,stn[0],format="('S/N [ALFALFA]:  ',f4.1)"
-         IF (detflag eq 'y') THEN printf, lun,chn1,chn2,format="('Signal edges [channels]:  ',i4,' - ',i4)"
+         IF (detflag eq 'y') THEN printf, lun,ch1,ch2,format="('Signal edges [channels]:  ',i4,' - ',i4)"
         case stack.hd.input[2] of    ;which quantity has been stacked
             1: printf, lun,totS/1000.,totSerr_tot/1000.,format="('Measured flux [Jy]:  ',f6.2,' +/-',f6.2)"
             2: printf, lun,mhi,mhi_err,format="('Measured M_HI [Msun]:  ',e10.2,' +/-',e10.2)"

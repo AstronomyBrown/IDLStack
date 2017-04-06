@@ -156,8 +156,8 @@ endloop:
 END
 
 ;-------------------MAIN--------------------------
-pro DAG_ERROR, output1, output2, output3, output4;, output5;, output6;, output7;, output8
-folders = [output1, output2, output3, output4];, output5];, output6];, output7];, output8]
+pro DAG_ERROR, output1;, output2, output3, output4;, output5;, output6;, output7;, output8
+folders = [output1];, output2, output3, output4];, output5];, output6];, output7];, output8]
 
 !EXCEPT=2
 lightsp=299792.458D           ;km/s
@@ -170,8 +170,8 @@ sy=3.8/(2.*SQRT(2*alog(2)))
 frqarr=restfrq+(findgen(nchn)-511)*deltaf ;frequency array
 
 path='/mnt/cluster/kilborn/tbrown/AA_project/SRCFILE/FULLSAMPLE/all/'
-sampledir = '/mnt/cluster/kilborn/tbrown/AA_project/SAMPLES/metallicity/'
-filename = 'sample_lgOH.fits'
+sampledir = '/mnt/cluster/kilborn/tbrown/AA_project/SAMPLES/environment/'
+filename = 'sample_grp_SFR_highmgrp_for_ref_report.fits'
 listname = sampledir + filename
 
 data_tab_tot=mrdfits(listname,1)
@@ -195,6 +195,8 @@ ssfr_tot = data_tab_tot.MEDIAN_SSFR
 fapc_tot = data_tab_tot.fa_prank ; fixed aperture percentage rank
 nnpc_tot = data_tab_tot.nn7_prank ; nth Neighbour percentage rank
 mhpc_tot = data_tab_tot.mh_prank ; nth Neighbour percentage rank
+cflag_tot = data_tab_tot.conf_flag ; 1 = not confused, >1 confused
+
 catch, error
 IF (error ne 0L) THEN BEGIN
     catch, /cancel
@@ -247,7 +249,7 @@ fapc_sort = fapc_tot[sort_idx]
 nnpc_sort = nnpc_tot[sort_idx]
 mhpc_sort = mhpc_tot[sort_idx]
 lgOH_12_sort = lgOH_12_tot[sort_idx]
-
+cflag_sort = cflag_tot[sort_idx]
 
 for fold=0,N_ELEMENTS(folders)-1 do begin
     
@@ -385,6 +387,7 @@ for fold=0,N_ELEMENTS(folders)-1 do begin
             bin_cond = WHERE((param_1 ge low_lim[k]) AND (param_1 lt up_lim[k]) $
                 AND (param_2 ge lim_ab[0]) AND (param_2 lt lim_ab[1]) $ ; 
                 AND (param_3 ge lim_ii[0]) AND (param_3 lt lim_ii[1]) $
+                AND (cflag_sort eq 1) $
                 AND (ngal_sort eq 1))
             END
         3: BEGIN ; centrals
@@ -398,6 +401,7 @@ for fold=0,N_ELEMENTS(folders)-1 do begin
             bin_cond = WHERE((param_1 ge low_lim[k]) AND (param_1 lt up_lim[k]) $
                 AND (param_2 ge lim_ab[0]) AND (param_2 lt lim_ab[1]) $ ; 
                 AND (param_3 ge lim_ii[0]) AND (param_3 lt lim_ii[1]) $
+                AND (cflag_sort eq 1) $
                 AND (BCG_sort eq 1))
         END
         5: BEGIN ; satellites

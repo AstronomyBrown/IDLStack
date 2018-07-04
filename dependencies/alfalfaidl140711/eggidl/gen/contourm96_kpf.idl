@@ -1,0 +1,36 @@
+; contourm96_kpf.idl
+; based on makecontourM96.pro by Sabrina Stierwalt
+
+restore,'/home/hatillo3/sabrina/krzys/gridbf_1044+11a.sav'
+;(the data is contained in grid.d which is 1024 channels in velocity,
+;2 polarizations and 144 by 144 pixels in the ra and dec directions)
+
+;AVERAGE BOTH POLARIZATIONS
+dn=(grid.d[*,0,*,*]+grid.d[*,1,*,*])/2.
+dn=reform(dn)
+
+dnzoom=dn[415:505,*,*] ;these channels represent the velocity range of 
+                       ;interest over the galaxy
+
+;REPRESENT EACH PIXEL POINT WITH A SINGLE VELOCITY RATHER THAN A SPECTRUM
+;(for now this is very rough since i just use the max velocity value at each
+;position)
+dncont=max(dnzoom, dimension=1)
+
+; Set up a RA/DEC grid
+; x0   = 10h 39m 08.4s
+; x143 = 10h 48m 52.2s
+; y0   = 09d 48m 16.3s
+; y143 = 12d 11m 54.5s
+xvals = dindgen(144)*2.432500005/143.0 + 159.784999995
+yvals = dindgen(144)*2.393944444/143.0 +   9.804527778
+
+; MAKE CONTOURS
+; The ranges shouldn't be necessary, but the .sav seems to contain some odd settings for !x and !y
+contour,    dncont, xvals, yvals, levels=[3,4,5,10,20,30,40,50,60,75,100,125,150,175,200,250], $
+    xrange=xvals[[0,143]], yrange=yvals[[0,143]]
+contourds9, dncont, xvals, yvals, levels=[3,4,5,10,20,30,40,50,60,75,100,125,150,175,200,250], $
+    xrange=xvals[[0,143]], yrange=yvals[[0,143]], ds9reg='m96contours.con'
+
+;you can play with the numbers in the levels array a lot to see what
+;looks best

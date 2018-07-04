@@ -801,7 +801,6 @@ for j=0,N_ELEMENTS(p1lim)-2 do begin
         endif
         end
 
-
     2: begin ; isolated
         PRINT, 'stacking isolated central galaxies (Ngal=1 & bcgflag=1)'
         bin_cond = WHERE((param_1 ge p1lim[j]) and (param_1 lt p1lim[j+1]) $

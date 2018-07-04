@@ -242,7 +242,9 @@ FOR fold=0,N_ELEMENTS(folders)-1 do begin
     output = folders[fold]
     spawn,'mkdir '+output+'/resample/'
     PRINT, ''
-    xbin_tot = 5
+    read, xbin_tot, prompt='Enter number of first parameter bins [5]: '
+    if (xbin_tot eq '') then xbin_tot=5
+    xbin_tot = fix(xbin_tot)
     ybin_tot = 5
     ; read, bin_tot, prompt='How many structures do you want to RESTORE? (i.e. no. of bins) '
     j_pc = 20 ; set discard fraction to 20%

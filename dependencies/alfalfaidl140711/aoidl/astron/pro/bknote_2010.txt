@@ -1,0 +1,7 @@
+Wayne Landsman (maintains the library) has a new version of querydss (that
+is called by all the ALFALFA stuff, and that seems to keep IDL from
+hanging
+for me.  I would try to install that over the querydss.pro version in
+
+./aoidl/astron/pro/querydss.pro
+

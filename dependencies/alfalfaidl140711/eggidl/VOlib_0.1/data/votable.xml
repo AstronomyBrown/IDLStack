@@ -1,0 +1,85 @@
+<?xml version="1.0"?>
+<!DOCTYPE VOTABLE SYSTEM "http://us-vo.org/xml/VOTable.dtd">
+<VOTABLE ID="v1.0">
+  <DEFINITIONS>
+    <COOSYS system="eq_FK5" equinox="2000"/>
+  </DEFINITIONS>
+    
+  <RESOURCE ID="T9001">
+     <DESCRIPTION>
+       HEASARC Browse data service
+       Please send inquiries to mailto:request@athena.gsfc.nasa.gov
+    </DESCRIPTION>
+    <PARAM ID="default_search_radius" ucd="OBS_ANG-SIZE" value="0.25"/>
+    <TABLE ID="heasarc_abell_9001">
+      <DESCRIPTION> Abell Clusters </DESCRIPTION>
+      
+      <FIELD name="unique_id" datatype="int" ucd="ID_MAIN">
+        <DESCRIPTION> Integer key </DESCRIPTION>
+      </FIELD>
+      
+      <FIELD name="name" datatype="char" arraysize="*">
+        <DESCRIPTION> Abell Catalog Number (s = Supplemental Cluster Catalog) </DESCRIPTION>
+      </FIELD>
+      
+      <FIELD name="ra" datatype="float" unit="degree" ucd="POS_EQ_RA_MAIN">
+        <DESCRIPTION> Right Ascension (hh mm.m) </DESCRIPTION>
+      </FIELD>
+      
+      <FIELD name="dec" datatype="float" unit="degree" ucd="POS_EQ_DEC_MAIN">
+        <DESCRIPTION> Declination (dd mm) </DESCRIPTION>
+      </FIELD>
+      
+      <FIELD name="_count" datatype="int">
+        <DESCRIPTION> Number of Cluster Members </DESCRIPTION>
+      </FIELD>
+      
+      <FIELD name="bmtype" datatype="char" arraysize="*">
+        <DESCRIPTION> Bautz-Morgan Type, :=mean of obs, ?=quest </DESCRIPTION>
+      </FIELD>
+      
+      <FIELD name="redshift" datatype="float">
+        <DESCRIPTION> Redshift </DESCRIPTION>
+      </FIELD>
+      
+      <FIELD name="rich" datatype="char" arraysize="*">
+        <DESCRIPTION> Abell Richness Class (Abell 1958) </DESCRIPTION>
+      </FIELD>
+      
+      <FIELD name="dist" datatype="char" arraysize="*">
+        <DESCRIPTION> Abell Distance Class (Abell 1958) </DESCRIPTION>
+      </FIELD>
+      
+      <FIELD name="vmag" datatype="float">
+        <DESCRIPTION> V Magnitude for 10th Ranked Member, Correlated for Extinction </DESCRIPTION>
+      </FIELD>
+      
+      <FIELD name="Search_Offset" datatype="double" unit="'">
+        <DESCRIPTION> Offset of target/observation from query center </DESCRIPTION>
+      </FIELD>
+	
+	
+      <DATA>
+        <TABLEDATA>
+<TR><TD>3337</TD><TD>ABELL1445</TD><TD>180.45</TD><TD>-0.15</TD><TD>81</TD><TD>III</TD><TD>   0.000</TD><TD>2</TD><TD>6</TD><TD> 17.6</TD><TD>74.036</TD></TR>
+<TR><TD>3334</TD><TD>ABELL1419</TD><TD>179.07</TD><TD>-0.23</TD><TD>73</TD><TD>II-III</TD><TD>   0.000</TD><TD>1</TD><TD>5</TD><TD> 17.0</TD><TD>92.598</TD></TR>
+<TR><TD>3419</TD><TD>ABELL1459</TD><TD>181.08</TD><TD>2.50</TD><TD>60</TD><TD>III</TD><TD>   0.000</TD><TD>1</TD><TD>5</TD><TD> 17.0</TD><TD>110.797</TD></TR>
+<TR><TD>3328</TD><TD>ABELL1411</TD><TD>178.83</TD><TD>-0.52</TD><TD>69</TD><TD>III:</TD><TD>   0.000</TD><TD>1</TD><TD>6</TD><TD> 17.5</TD><TD>115.081</TD></TR>
+<TR><TD>3443</TD><TD>ABELL1437</TD><TD>180.13</TD><TD>3.33</TD><TD>154</TD><TD>I-II:</TD><TD>   0.134</TD><TD>3</TD><TD>5</TD><TD> 17.2</TD><TD>140.205</TD></TR>
+<TR><TD>3326</TD><TD>ABELL1392</TD><TD>177.65</TD><TD>-0.57</TD><TD>46</TD><TD/><TD>   0.138</TD><TD>0</TD><TD>5</TD><TD> 16.6</TD><TD>169.392</TD></TR>
+<TR><TD>3295</TD><TD>ABELL1407</TD><TD>178.40</TD><TD>-1.73</TD><TD>56</TD><TD>II</TD><TD>   0.000</TD><TD>1</TD><TD>5</TD><TD> 17.0</TD><TD>189.970</TD></TR>
+<TR><TD>3462</TD><TD>ABELL1463</TD><TD>181.20</TD><TD>3.93</TD><TD>69</TD><TD>III</TD><TD>   0.000</TD><TD>1</TD><TD>5</TD><TD> 17.2</TD><TD>190.081</TD></TR>
+<TR><TD>3470</TD><TD>ABELL1456</TD><TD>180.97</TD><TD>4.23</TD><TD>75</TD><TD>III</TD><TD>   0.000</TD><TD>1</TD><TD>5</TD><TD> 17.0</TD><TD>202.599</TD></TR>
+<TR><TD>3303</TD><TD>ABELL1389</TD><TD>177.35</TD><TD>-1.37</TD><TD>40</TD><TD>III</TD><TD>   0.000</TD><TD>0</TD><TD>5</TD><TD> 16.6</TD><TD>213.276</TD></TR>
+<TR><TD>3309</TD><TD>ABELL1376</TD><TD>176.57</TD><TD>-1.07</TD><TD>50</TD><TD>III</TD><TD>   0.000</TD><TD>1</TD><TD>5</TD><TD> 16.6</TD><TD>240.048</TD></TR>
+<TR><TD>3494</TD><TD>ABELL1424</TD><TD>179.40</TD><TD>5.03</TD><TD>52</TD><TD>III</TD><TD>   0.000</TD><TD>1</TD><TD>5</TD><TD> 16.6</TD><TD>244.665</TD></TR>
+<TR><TD>3287</TD><TD>ABELL1386</TD><TD>177.10</TD><TD>-1.93</TD><TD>66</TD><TD>I-II:</TD><TD>   0.000</TD><TD>1</TD><TD>5</TD><TD> 17.2</TD><TD>247.421</TD></TR>
+<TR><TD>3250</TD><TD>ABELL1404</TD><TD>178.10</TD><TD>-2.80</TD><TD>39</TD><TD/><TD>   0.000</TD><TD>0</TD><TD>5</TD><TD> 16.6</TD><TD>254.944</TD></TR>
+<TR><TD>3240</TD><TD>ABELL1399</TD><TD>177.80</TD><TD>-3.08</TD><TD>82</TD><TD>III</TD><TD>   0.091</TD><TD>2</TD><TD>4</TD><TD> 16.0</TD><TD>278.266</TD></TR>
+<TR><TD>3293</TD><TD>ABELL1364</TD><TD>175.93</TD><TD>-1.75</TD><TD>74</TD><TD>III</TD><TD>   0.107</TD><TD>1</TD><TD>4</TD><TD> 16.0</TD><TD>294.859</TD></TR>
+<TR><TD>3268</TD><TD>ABELL1373</TD><TD>176.37</TD><TD>-2.38</TD><TD>94</TD><TD>III</TD><TD>   0.131</TD><TD>2</TD><TD>5</TD><TD> 17.2</TD><TD>297.542</TD></TR>
+         </TABLEDATA>
+       </DATA>
+     </TABLE>
+   </RESOURCE>
+</VOTABLE>

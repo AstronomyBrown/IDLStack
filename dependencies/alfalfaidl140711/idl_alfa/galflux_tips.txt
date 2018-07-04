@@ -1,0 +1,32 @@
+	Tips on separating tight pairs with gridview/galflux
+
+0) Most effective job uses gridview and galflux in parallel, not
+galflux alone; gridview gives you the spatial information: use it!
+
+1) Zoom in on region of interest on gridview and monitor closely the
+channel numbers at which one member of the pair "starts" and "ends".
+
+2) Select a galflux box that, for each member of the pair, tries to
+contain as much of the flux of the meant  member, without including
+much of the companion. Yeah, easier said than done. However, don't
+worry if the box turns out to be very lopsided and it does not appear
+to contain *all* the flux of the target; galflux is smart enough to
+estimate the total flux from having as little as half in the flux box.
+
+3) On galflux, set the feature's edge flags over the spectral range
+including only channels *not overlapping* with the spectral range of
+the companion, if possible. See how your choice of flags changes the
+centroid of the HI with respect to that of the opt counterpart.
+
+4) Keep an eye on the opt z, if available and of good quality (small error).
+
+5) Measure your best guess, make sure that the parameter errors reflect
+your uncertainty. Go to companion and repeat. 
+
+It is generally a good idea to do the brighter member of the pair first.
+Whenever there appears to be opt source crowding or apparent asymmetry
+in the shape of the HI emission, see if that can be explained with a
+blended pair and then try to separate it. Document your attempt in the
+"comments" to the .src file. 
+
+rg/aug09

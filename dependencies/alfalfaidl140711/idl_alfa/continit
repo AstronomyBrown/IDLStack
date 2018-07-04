@@ -1,0 +1,23 @@
+;Change the line below to your home directory where you unpacked your tar file
+;Note that the line for fsc_droplist.pro needs to added for functionality on the
+;   machine called humacao.  Otherwise the line should be commented out. - 2006Sept2
+
+;;;;;;;;;;;;;;;;;;;
+
+cont='/home/dorado3/galaxy/idl_alfa/'
+
+;;;;;;;;;;;;;;;;;;;
+
+addpath, cont
+
+common nvssshare, nvssdir
+nvssdir=cont
+
+
+.comp cont_find
+.comp cont_script
+.comp create_table
+.comp plot_cont_table
+.comp plot_cont_table_publish
+make_specdet,spec1template
+device,retain=2

@@ -1,0 +1,88 @@
+PROJECT: VOlib
+Current Version: Beta 0.1
+Date Released: 02/23/05
+
+Purpose: To provide IDL libraries for use with common
+         Virtual Observatory (VO) tools and services.
+
+General Comments: Many of these services require actual
+                  webservices (i.e., SOAP or HTTP PUT
+                  and GET). SOAP webservices are described
+                  in there WSDLs (Web Service Description
+                  Language) files at the source. These
+                  WSDLs are downloaded and compiled in
+                  JAVA. Thus, VOlib for IDL requires the
+                  IDL Java Bridge (IDL version 6.+) and
+                  its proper configuration.
+
+                  The VO Table reader uses the native IDL
+                  XML reader IDLffXMLDOM.
+
+                  Some "services" are just HTTP PUT and
+                  GETs. These are less elegant than true
+                  webservices, and files must be downloaded
+                  and then read in (unlike in SOAP-based web
+                  services where data is streamed right into
+                  an IDL structure). Thus, VOlib needs
+                  write permissions in your working diectory.
+
+Installation: unzip and untar the the file (gunzip VOlib_0.1.tar.gz,
+              tar xvf VOlib_0.1.tar). Place the idljavabrc in your
+              home directory as .idljavabrc (i.e., hidden). Place
+              the following two lines in your .cshrc file:
+
+             setenv IDLJAVAB_LIB_LOCATION /usr/java/java/jre/lib/i386/client/
+             setenv IDLJAVAB_CONFIG /home/usename/.idljavabrc
+             setenv IDL_PATH ${IDL_PATH}:+/home/chrism/idl/VOlib_0.1/pro
+             setenv IDL_PATH ${IDL_PATH}:+/home/chrism/idl/VOlib_0.1/dependencies
+
+
+              The first environment variable locates your JAVA lib
+              libjvm.so. Make sure the libjvm.so file exists.
+              The second locates your .idljavabrc. Edit this file
+              for where you want the logs stored.
+              The third and fourth tell IDL where to find the procedures.
+              PRO contains the VO specific libraries, and DEPENDENCIES
+              contains other IDL libraries you will need. This assumes
+              that you *already* have IDL_PATH set, e.g. for the GSFC
+              IDL ASTROLIB libraries:
+              setenv IDL_PATH /home/user/idl/astron_lib/pro
+
+              EDIT the file setupjava.csh to meet your local needs.
+              Basically, find the location of your JAVA and place
+              VOlib somewhere useful (e.g. /home/user/idl/VOlib).
+              Then specify where VOlib lives. This setup script
+              simply sets the environment variable CLASSPATH which
+              is needed for all of the JAVA libraries.
+
+Run: First, source your .cshrc.
+     Second, source setupjava.csh
+     Third, run IDL.
+
+Failures: Can be due to any number of things: servers down, poorly
+          formatted XML, buggy code, bad JAVA configuration, etc.
+          You should look at a few things when your use of the code
+          fails: 
+          (1) Check if the server is actual up and running.
+          (2) Try a call from your browser to the service (most
+              of the procedures have a (commented out) print statement
+              that will give you the precise call
+          (3) If it is a JAVA bridge problem, look at the JB logs
+              created by the JAVA bridge logging utility (see .idljavabrc).
+          (4) If it is a JAVA bridge problem, run except.pro which catches
+              the JAVA exception and prints some information.
+          (5) Restart IDL.
+
+Known Problems with IDL and JAVA: 
+          These is a problem with the libstdc++ library on many 
+          RedHat/Suse distros when working with IDL. You might need
+          to rpm -force the following RPM:
+          http://www.rsinc.com/services/techtip.asp?ttid=3790
+
+
+This code comes with no warranty or guarantee. It is intended as
+an open source library distribution for IDL (www.rsinc.com). Comments,
+suggestions, contributions, and collaborations are most welcome.
+
+email: cmiller@noao.edu
+

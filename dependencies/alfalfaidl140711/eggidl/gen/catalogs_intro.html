@@ -1,0 +1,176 @@
+<html>
+       <head>
+       <title> Catalog Matching Introduction</title>
+       </head>
+<body bgcolor="ffffff">
+
+<h2> An Introduction to Matching ALFALFA Detections to Optical Surveys</h2>
+
+<a href="#2MASS">2MASS</a><p>
+<a href="#SDSS">SDSS</a><p>
+<a href="#VAGC">VAGC</a><p>
+
+<p>
+Being able to match ALFALFA detections to optical counterparts allows
+for comparison to optical surveys and calculation of important
+quantities such as M_B / L.
+<p>
+Information is provided here on how to do basic matches to two surveys
+- 2MASS and SDSS.  Information is included on how to access these
+surveys online.  In addition, routines are provided for matching to
+the VAGC which contains recalculated (better?) SDSS magnitudes but is
+only up to date for DR4.  The
+matching procedures are simple at this time and return the nearest
+optical counterpart.
+<p>
+A general useful procedure handles ALFALFA catalogs.
+<UL>
+<LI><a href="egggenlist.html#READ_ALFALFACAT">read_alfalfacat</a><p>
+This procedure takes an output catalog from the ALFALFA pipeline and
+reads it into an IDL structure with tag names matching the given
+column headings.
+</UL>
+
+
+<p>
+<h3><u><a name="2MASS">2MASS</a></u></h3><p>
+<UL>
+<LI><a
+href="egggenlist.html#LIST_COORDS_2MASS">list_coords_2mass</a><p>
+This procedure takes the pathname of an ALFALFA catalog and creates an
+output textfile with a coordinate list formatted for input to GATOR.
+The user can specify whether already identified optical counterpart
+coordinates or HI detection coordinates should be used, with HI
+coordinates being the default.  <p>
+Note that the website specifies that filenames should be no more than
+nine characters, alphanumeric or underscore, must start with an
+alphabetical character and should have a '.tbl' extension. However,
+files uploaded with no extension seem to work properly.  RA and DEC
+are formatted to be in decimal degree format - this is the only format
+currently allowed for the multi-object search.  The GATOR query
+service for the Extended Source Catalog (XSC) can be found  <a href="http://irsa.ipac.caltech.edu/cgi-bin/Gator/nph-scan?submit=Select&projshort=2MASS">here</a>.
+<LI><a href="egggenlist.html#READ_2MASS">read_2mass</a><p>
+This procedure reads the output from a 2MASS Gator query into an IDL
+structure.  This procedure is independent of the number of columns and
+returns column headings as tag names so
+that the output from the Gator query can be modified.  However, the
+formatting is only checked for the standard output so if any
+non-standard columns are included that are not of the float format
+(default) the procedure will need to be modified.
+<P><b>Important!</b> The 'null' values in the 2MASS source list must
+be replaced by ' -99' or a similarly valued (four character) place
+holder for formatting reasons.
+<LI><a href="egggenlist.html#MATCH2MASS">match2mass</a><p>
+This procedure takes the pathnames for an ALFALFA catalog and 2MASS
+source lists, reads the catalogs into structures, matches based on
+coordinates, and returns a structure containing the information from
+both catalogs.The 2MASS source list contains a column (dist_x)
+containing the separation between the 2MASS source and input
+coordinates in arcseconds. In addition, a column named detections is
+added that details the number of matches found for a given set of input coordinates.
+Currently the closest 2MASS object is returned by default.
+<LI><a href="egggenlist.html#CORR_MAG_2MASS">corr_mag_2mass</a><p>
+This procedure takes an ALFALFA catalog and 2MASS source list, matches them using match2mass and applies magnitude corrections.  
+The IDL friendly version of the AGC is restored (note that this takes
+time) and is used to find reddening values from the DIRBE maps which
+are used to calculate Galactic extinction.
+Which bandpasses and type of magnitude are to be corrected must be
+specified. Otherwise the program defaults to returning no corrected magnitudes.  
+The options are /jmag, /hmag and /kmag where at least one of the types of magnitude must be included - /iso or /ext.  
+The procedure will check to make sure that the necessary magnitudes are included in the 2MASS file.
+Internal extinction corrections are applied from Masters et al 2003.
+The axial ratios from the K band are used for all three filters as this is part of the default output from 2MASS whereas axial ratios from H and J are not.
+If the flag /noint is set, internal extinction corrections will not be applied.
+This procedure outputs a structure that includes the matched catalogs and corrected magnitudes and their errors from measurement and uncertainty in the internal extinction correction. 
+No effort is made to apply a k-correction at this point in time.
+<p>
+</UL>
+<p>
+
+<p>
+<h3><u><a name="SDSS">SDSS</a></u></h3><p>
+<UL>
+<LI><a href="egggenlist.html#LIST_COORDS_SDSS">list_coords_sdss</a><p>
+This procedure takes the filename of an ALFALFA catalog and outputs a
+text file that includes a list of ALFALFA source names and coordinates
+in the format expected by SDSS.  This file can be uploaded <a
+href="http://cas.sdss.org/dr6/en/tools/crossid/upload.asp">here</a> in
+order to query DR6.  Note that the infile size is limited to 80 KB and
+the output will not exceed 100,000 objects.  An example query can be
+found <a href="egggenlist.html#LIST_COORDS_SDSS">here</a>.  Make sure
+to select the CSV format for use with further IDL procedures.<p>
+In addition, the coordinate list created by this procedure can be used
+to find images at <a
+href="http://cas.sdss.org/astro/en/tools/chart/list.asp"> this
+site</a> which returns mosaics of SDSS images centered at the
+coordinates of interest.  The limit for this service is 1,000 objects
+so large catalogs will need to be entered in pieces.
+<LI><a href="egggenlist.html#READ_CSV_SDSS">read_csv_sdss</a><p>
+This procedure reads a CSV output table from a SDSS SQL query into a
+structure in IDL.  This is independent of the number of columns so
+that the query output can be modified.  However if any output were to
+be added to the example query given in <a
+href="egggenlist.html#LIST_COORDS_SDSS">list_coords_sdss</a> that was
+a string or integer, the procedure would need to be modified as the
+default formatting is float.
+<LI><a href="egggenlist.html#MATCH_SDSS">match_sdss</a><p>
+This procedure takes an ALFALFA catalog and CSV file containing SDSS
+sources found from a matched query using a coordinate list create by
+list_coords_sdss and outputs a structure containing information from
+both catalogs.  Two columns are added.  Detections list the number of SDSS sources within the search radius for each ALFALFA object.
+The procedure defaults to returning the closest match.  The separation
+between the ALFALFA coordinates and returned SDSS source is given in
+the separation column.
+<LI><a href="egggenlist.html#MAG_CORR_SDSS">mag_corr_sdss</a><p>
+This procedure takes an ALFALFA catalog and SDSS source list and creates an output structure that includes B magnitude information (corrected and uncorrected for extinction).
+This procedure will check that the necessary information is in the SDSS table and print warning if it is not there.
+The B magnitude is calculated from Sloan g and r using the conversions in Blanton & Roweiss 2007.
+This is an AB magnitude which is then transformed to Johnson B using the offset from Frei & Gunn, 1994.
+The reddening values for Galactic extinction are found by matching to the AGC (IDL friendly version, restored).
+Internal extinction corrections are applied based on Tully et al. 1998.
+The axial ratio information comes from expab_g.  This is chosen on the basis that Sloan g is closest to B.
+Also, most galaxies will be late type and well fit by an exponential profile.
+Errors are propagated through from the g and r filters.  No errors are included for corrections at this point in time.
+The user controls which magnitudes (if any) are returned.  The options are /model or /petro for model magnitudes (combination of deVacouler's and exponential fit) and Petrosian magnitudes.  
+Note that the procedure expects model magnitude information by the tag name modelmag_? and not the short names ?, where ? represents the sloan filter.
+If the flag /noint is set no internal extinction correction will be applied.
+No effort is made to apply a k-correction at this point in time.
+<p>
+</UL>
+<p>
+
+<p>
+<h3><u><a name="VAGC">VAGC</a></u></h3><p>
+These procedures require the SDSS Imaging portion of the VAGC
+(preferably limited to sky coverage of ALFALFA).  This can currently
+be found in '/home/humacao/humacao1/betsey/vagc/sdssimaging_alfalfa.sav'.<p>
+<UL>
+<LI><a href="egggenlist.html#MATCH_VAGC">match_vagc</a><p>
+This procedure takes the full pathnames of an ALFALFA catalog and IDL
+save file containing the VAGC limited to ALFALFA.  Note that the IDL
+save file is presumed to be restored to sdssimaging_alfalfa.  At this
+time no information is returned except from the SDSS imaging portion
+of the VAGC.  The column 'match' gives an index for the ALFALFA
+limited VAGC that can be used to query other catalogs at a later
+date.  The indexing for ALFALFA is saved in
+'/home/humacao/humacao1/betsey/vagc/index_alfalfa.sav'.  This
+procedure searches within a box defined by radius for counterparts to
+ALFALFA detections where one side of the box is defined by 2*radius.
+If no radius is supplied, the default value is 60 arcsec.  The closest
+counterpart is returned by default.  'Detections' tracks the number of
+counterparts within the search area.  'Separation' gives the
+separation between the ALFALFA coordinates and the closest optical
+counterpart.  Note that this procedure is extremely slow.  This is
+most likely do to the loop over which coordinate matches are found.
+<LI><a href="egggenlist.html#CORR_MAG_VAGC">corr_mag_vagc</a><p>
+This procedure calls match_vagc and computes B magnitudes and extinction corrections.
+A structure is returned with ALFALFA, VAGC and B mag information.
+Note that internal extinction correction is not applied due to missing axial ratio information from the SDSS imaging catalog of the VAGC.
+In addition, there is currently no error propagation for the B magnitudes.
+B magnitudes can be calculated from Petrosian or Model fluxes.  
+The user may specify either or both, but if none are specified no B magnitude information will be returned.
+The method for computing magnitudes is the same as for SDSS except that the VAGC provides Sloan fluxes which must first be converted to magnitudes.
+<p>
+</UL>
+<p>
+The procedures for the VAGC are currently the least sophisticated and slowest of the various catalogs.

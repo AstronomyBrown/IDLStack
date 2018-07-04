@@ -1,0 +1,102 @@
+;Change the line below to your home directory where you unpacked your tar file
+;Note that the line for fsc_droplist.pro needs to added for functionality on the
+;   machine called humacao.  Otherwise the line should be commented out. - 2006Sept2
+
+;;;;;;;;;;;;;;;;;;;
+
+; In order to change SDSS Data Release (source of opt images), modify:
+; GETDSS.PRO around line 566 and
+; GALCAT.PRO around line 1494
+
+idl_alfa='/home/dorado3/galaxy/idl_alfa/'
+
+;;;;;;;;;;;;;;;;;;;
+
+addpath, idl_alfa
+
+common agcshare, agcdir
+agcdir=idl_alfa
+
+.comp hans
+.comp chdoppler
+.comp radec_to_name
+.comp bpc
+.comp calib1
+.comp calib2
+.comp make_caldrift
+.comp bpd
+.comp bpdgui
+.comp strip_pv3
+.comp blmap4
+.comp make_specdet
+.comp get_specdet
+.comp restore_specdet
+.comp inspect4
+.comp atv_r5.pro
+.comp msr_spec
+.comp check_pos.pro
+.comp check_pv
+.comp curfull.pro
+.comp hvccat.pro
+.comp reviewbb                  
+.comp grid_prep_0h
+.comp grid_prep
+.comp grid_q
+.comp grid_base
+.comp run_extract.pro
+.comp extract_compute.pro
+.comp extract_display.pro
+.comp extract_small.pro
+.comp mpfit2Dfun.pro
+.comp mpfit.pro
+;.comp ex3D_c
+.comp ex3D_d
+.comp ex3D_s
+.comp sort_cat.pro
+.comp show_spectrum.pro
+.comp posfind.pro
+.comp tvboxbk.pro
+.comp nedquery.pro
+.comp jpegout.pro
+.comp sigfig.pro
+.comp decimals.pro
+.comp ratickname.pro
+.comp dectickname.pro
+.comp gridview.pro
+.comp getfile.pro
+.comp galflux4.pro
+.comp getdss.pro  
+.comp grid_flatfield
+.comp agcbrowse.pro
+.comp htmloutput
+.comp galcat
+.comp ex3D_cube
+.comp srclog.pro
+.comp plotcluster.pro
+.comp plotalfa.pro
+.comp /home/dorado3/galaxy/eggidl/coyote/fsc_droplist.pro
+.comp flagbb.pro
+.comp ex3Dh_c
+.comp ex3Dh_cube
+.comp psopen
+.comp psclose
+.comp grid_q
+.comp pointcorrect.pro
+.comp pointcorrectfix.pro
+.comp pointcorrectCR1.pro
+.comp nameres.pro
+.comp checksloan.pro
+.comp sloanfetch.pro
+.comp sloan_galcat.pro
+.comp sloan_getobjID.pro
+;.comp batchgrids.pro
+.comp flowmodel_dist.pro
+.comp vhel2cmb.pro
+.comp distance_subroutines.pro
+.comp coords_dist.pro
+.comp distance_guess.pro
+.comp distance_catalog.pro
+.comp a2010fv.pro
+.comp skyd.pro
+make_specdet,spec1template
+device,retain=2

@@ -1,0 +1,37 @@
+Obtaining all GALEX survey tiles within a particular region
+by Krzysztof Findeisen
+Last modified 10/23/2006
+
+1. Run the following query (modified for whatever region and survey 
+	you want) in MAST. Do not change the select clause. Save the 
+	results in CSV format.
+
+	select pe.tilenum, pe.tilename, pe.img, 
+		pe.try, pe.subvis, pe.object
+	from photoextract as pe
+	where
+	/* there really should be a rectangle retrieval function 
+	   like for SDSS, but I can't find it */
+	pe.crval1 between 176.0 and 210.0 and pe.crval2 between 12.0 and 16.0
+	
+	/* I'm sure the survey ID is stored in some table, but I 
+	   can't find it */
+	and (
+	substring(pe.tilename, 1, 2) = 'NG'		// Nearby Galaxies Survey
+	/*
+	or substring(pe.tilename, 1, 3) = 'AIS'
+	or substring(pe.tilename, 1, 3) = 'MIS'
+	*/
+	)
+	
+	and t.target_id = pe.tilename
+	and pe.ow = 1
+
+2. Run the MAKETILESCRIPT procedure in IDL with the name of the CSV 
+	file as the first argument and the name of a new FTP script 
+	file as the second.
+
+3. Use the script to retrieve the tiles. The current version merely 
+	grabs all intbgsub files; if you want other files, modify the 
+	filetypes array in the procedure source. The script currently 
+	does not support any QA files, such as the SExtractor regions.

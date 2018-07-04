@@ -1,0 +1,40 @@
+CONE PLOT NOTES:
+	Call is widget_cone_plot
+	
+	Widget window asks which catalog
+
+	The command line requires input from the user:
+
+		Type "y" or "n" for header info on catalog, default is n
+
+		Type "c", "h" or "b" for locations of labels on cone plot, 
+		default is c
+			If you want labels every hour, be sure your catalog 
+			starts and ends in even hour increments. For example,
+			12.5-15.5 not 12.0-15.5.
+
+		Type the dimensions of your final eps file output. A good size 
+		is a sheet of paper, 8x10. The program will not move on until a
+		value is typed.
+
+		Restricting the plotted declination is allowed. If restriction
+		is desired, new minimum and maximum declination should be typed
+		in degree coordinates. For example: 00.0
+
+		Restriction of the velocity range to be plotted is also allowed.
+		Keep in mind that the plot range may need to be changed to
+		match the true angle value. This can be done when the widget
+		window pops up with the plotwidth text box.
+
+	The program automatically calculates the RA center from the first and
+	last entries of RA in the catalog. These are also the values used to
+	calculate the hour labels. Make sure the first and last entries of your
+	catalog are in fact the minimum and maximum RA.
+
+	When the widget window pops up, the cone plot is plotted in the widget
+	window with temporary placement of labels. When the plot is clicked,
+	coordinate information is displayed at the bottom of the plot. The
+	coordinate of each label can then be typed in the correct box to
+	correctly place the labels. When the save button is pressed, an eps file
+	is created in the current directory called: cone_plot.eps 
+

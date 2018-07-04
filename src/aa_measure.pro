@@ -34,13 +34,15 @@
 pro f_bmask,bmask,nchn
   repeat begin
     print, 'Left click LEFT end of baseline box, right click to exit...'
-    cp, x=x, y=y
+    cursor, x, y, /DATA
+    print, 'x=', x,'', 'y=', y
     xpos1=round(x)
     if (xpos1 lt 0.) then xpos1 = 0.
     wait, 0.5
     if (!mouse.button eq 4) then goto, get_out
     print, 'Left click RIGHT edge of baseline box...'
-    cp, x=x, y=y
+    cursor, x, y, /DATA
+    print, 'x=', x,'', 'y=', y
     xpos2=round(x)
     if (xpos2 gt nchn-1) then xpos2=nchn-1
     wait, 0.5
@@ -77,16 +79,18 @@ end
 ;
 ; :Obsolete:
 ;-
-pro rms_mask,mask,nchn
+pro rms_mask, mask, nchn
  repeat begin
      print, 'Left click LEFT end of rms box, right click to exit...'
-     cp, x=x, y=y
+     cursor, x, y, /DATA
+     print, 'x=', x,'', 'y=', y
      xpos1=round(x)
      if (xpos1 lt 0.) then xpos1 = 0.
      wait, 0.5
      if (!mouse.button eq 4) then goto, endloop
      print, 'Left click RIGHT edge of rms box...'
-     cp, x=x, y=y
+     cursor, x, y, /DATA
+     print, 'x=', x,'', 'y=', y
      xpos2=round(x)
      if (xpos2 gt nchn-1) then xpos2=nchn-1
      wait, 0.5
@@ -164,7 +168,7 @@ ybin_tot = 5
 
 CDFchoice = 'N'
 CDFchoice_str = ['','Are you measuring flux in cumulative distribution function (CDF) bins?',$
-                     '(Y/N)', '']
+                     '(y/N)', '']
 print, CDFchoice_str, FORMAT='(A)' 
 read, CDFchoice ,prompt=''
 CDFchoice = strmid(strupcase(CDFchoice),0,1)
@@ -174,6 +178,7 @@ for j=0,xbin_tot-1 do begin
     for k=0,ybin_tot-1 do begin
     	
         ybin_no = STRCOMPRESS((k + 1), /remove_all)
+        print, ''
         print, 'Beginning bin number ' +xbin_no+'-'+ybin_no
 
         ; Establish error handler. When errors occur, the index of the
@@ -224,36 +229,36 @@ for j=0,xbin_tot-1 do begin
         maskA=intarr(nchn)
         maskB=intarr(nchn)
         basecoef=dblarr(12)
-        hor
-        ver
-        window,xsize=900,ysize=600
+        ; hor
+        ; ver
+        window,xsize=1200,ysize=700
         case stack.hd.input[2] of    ;which quantity has been stacked
-            1: yt=textoidl('mJy\cdot (km/s)^2')
-            2: yt=textoidl('mJy\cdot (km/s)^2 Mpc^2') 
-            3: yt=textoidl('mJy\cdot (km/s)^2 Mpc^2 / M_{sol}') 
+            1: yt=textoidl('mJy (km/s)^2')
+            2: yt=textoidl('mJy (km/s)^2 Mpc^2') 
+            3: yt=textoidl('mJy (km/s)^2 Mpc^2 / M_{sun}') 
         endcase
-        ;;PO3A
+        
         !P.MULTI = [0, 1, 2]
-        plot, speca,title='pol A',ytitle=yt,charsize = 3 ,yrange=[1.2*min(speca),1.2*max(speca)]
+        print, max(xarr)
+        plot, speca, title='pol A',ytitle=yt, charsize = 3 ,yrange=[1.2*min(speca),1.2*max(speca)], xrange=[min(xarr),max(xarr)]
         oplot,[511,511],[1.2*min(speca),1.2*max(speca)], linestyle=2
         click= ' '
         ; read,click,prompt='Enter to continue...'
         ;;POLB
         ;;Change the vertical scale if necessary
-        hor
-        ver
-        plot,specb,title='pol B',ytitle=yt,charsize = 3 ,yrange=[1.2*min(specb),1.2*max(specb)]
+        ; hor
+        ; ver
+        plot,specb,title='pol B',ytitle=yt,charsize = 3 ,yrange=[1.2*min(specb),1.2*max(specb)], xrange=[min(xarr),max(xarr)]
         oplot,[511,511],[1.2*min(specb),1.2*max(specb)], linestyle=2
         ; read,click,prompt='Enter to continue...'
 
         print,'--- Averaged spectrum ---'
         ;;;FINAL SPEC
-        hor
-        ver
+        ; hor
+        ; ver
         spec=(specA+specB)/2.
-        plot,spec,ytitle=yt,charsize = 3 ,yrange=[1.2*min(spec),1.2*max(spec)]
-        oplot,[511,511],[1.2*min(spec),1.2*max(spec)], linestyle=2
-        print,min(spec),max(spec)
+        plot,xarr,spec,ytitle=yt,charsize = 3 ,yrange=[1.2*min(spec),1.2*max(spec)], xrange=[min(xarr),max(xarr)]
+        oplot,[511,511],[-100,100], linestyle=2
 
         ysc='n'
         ;read, ysc, prompt='Rescale vertical axis? [y/N] '
@@ -268,7 +273,7 @@ for j=0,xbin_tot-1 do begin
            read, a, b, prompt='Enter desired ymin and ymax (e.g.: 1,5): '
            ver, a, b
            plot,spec,ytitle=yt,charsize = 3
-           oplot,[511,511],[a,b], linestyle=2
+           oplot,[511,511],[-100,100], linestyle=2
            ans='y'
            read,ans,prompt='OK? [Y/n]'
            if (ans eq '') then ans='y'
@@ -287,16 +292,18 @@ for j=0,xbin_tot-1 do begin
 
         boxcarsm:
         !P.MULTI=0
-        plot,specnew,ytitle=yt,charsize = 3
-        oplot,[511,511],[a,b], linestyle=2
+        plot,xarr,specnew,ytitle=yt,charsize = 3, xrange=[min(xarr),max(xarr)]
+        oplot,[0,nchn],[0,0], linestyle=2
+        oplot,[511,511],[-100,100], linestyle=2
         smo=5
-        print, "Boxcar smoothing. Enter # of channels to smooth by (odd number): "
-        ;read, smo
+        ; print, "Boxcar smoothing. Enter # of channels to smooth by (odd number): "
+        ; read, smo
         specnew1=smooth(specnew,smo)
-        hor
+        ; hor
         ans=''
-        plot,specnew1,ytitle=yt,charsize = 3
-        oplot,[511,511],[a,b], linestyle=2
+        plot,xarr,specnew1,ytitle=yt, charsize = 3, xrange=[min(xarr),max(xarr)]
+        oplot,[0,nchn],[0,0], linestyle=2
+        oplot,[511,511],[-100,100], linestyle=2
         ans='y'
         ;read,ans,prompt='OK? [Y/n]'
         if (ans eq '') then ans='y'
@@ -306,7 +313,7 @@ for j=0,xbin_tot-1 do begin
 
         ; BASELINE FITTING
         print,''
-        print, 'BASELINE FITTING'
+        print,'--- Baseline Fitting ---'
         print,''
         f_bmask,bmask,nchn
         ansb='y'
@@ -317,12 +324,12 @@ for j=0,xbin_tot-1 do begin
         yfit=poly(xarr,bcoef)
         basecoef[0:norder]=bcoef
         oplot,yfit
-        read,ansb,prompt='Baseline OK? [Y/n]'
+        read,ansb,prompt='Baseline OK? [Y/n] '
         if (ansb eq '') then ansb='y'
         ansb=strmid(strlowcase(ansb),0,1)
         if (ansb eq 'n') then begin
             plot,specnew,ytitle=yt,charsize = 3
-            oplot,[511,511],[a,b], linestyle=2
+            oplot,[511,511],[-100,100], linestyle=2
             oplot,fltarr(nchn),linestyle=1
             b_fit,bmask,nchn,norder,CDFchoice,ansb
             indb=where(bmask eq 1)
@@ -330,9 +337,8 @@ for j=0,xbin_tot-1 do begin
         endif
         spec=specnew-yfit
         plot,spec ,ytitle=yt,charsize = 3 
-        oplot,[511,511],[a,b], linestyle=2
-        oplot,fltarr(nchn),linestyle=1
-
+        oplot,[0,nchn],[0,0], linestyle=2
+        oplot,[511,511],[-100,100], linestyle=2
         rms= stddev(spec[indb])
 
         ;;----------------------------------------
@@ -343,7 +349,7 @@ for j=0,xbin_tot-1 do begin
         IF (CDFchoice EQ 'Y') THEN BEGIN
             detflag = 'y'
         ENDIF ELSE BEGIN  
-            read, detflag, prompt='Is the stack a detection? [Y/N] '
+            read, detflag, prompt='Is the stack a detection? [Y/n] '
             print, ''
         ENDELSE
         if (detflag eq '') then detflag='y'
@@ -371,42 +377,54 @@ for j=0,xbin_tot-1 do begin
         ;;MEASURE Signal
         ;;zoom in spectrum first
         plot,spec,ytitle=yt,charsize = 3  
-        oplot,[511,511],[a,b], linestyle=2
+        oplot,[511,511],[-100,100], linestyle=2
+        oplot,[0,nchn],[0,0], linestyle=2
         print,' '
         print,'Left click LEFT and RIGHT channel limits for plot'
-        cp, x=x, y=y
+        cursor, x, y, /DATA
+        print, 'x=', x,'', 'y=', y
         hor1=round(x)
         wait,0.5
-        cp, x=x, y=y
+        cursor, x, y, /DATA
+        print, 'x=', x,'', 'y=', y
         hor2=round(x)
         wait,0.5
-        hor,hor1,hor2
+        ; hor,hor1,hor2
         y_min=min(spec[hor1:hor2])
         y_max=max(spec[hor1:hor2])
-        ver,y_min-0.2*(y_max-y_min),y_max+0.2*(y_max-y_min)
+        ; ver,y_min-0.2*(y_max-y_min)
+        ; ver,y_max+0.2*(y_max-y_min)
+
 
         ;;Flag channels corresponding to edges [ch1,ch2] and peaks [chp1,chp2] of profile
         flagmsr:
-        plot,spec,ytitle=yt,charsize = 3  
-        oplot,[511,511],[a,b], linestyle=2
+        plot,velarr[hor1:hor2],spec[hor1:hor2],ytitle=yt,charsize = 3  
+        oplot,[-5000,5000],[0,0], linestyle=2
+        oplot,[0,0],[-100,100], linestyle=2
         oplot,fltarr(nchn), linestyle=2 ;y=0 dashed line
         print,' '
-        print,'Flag edges of spectral feature to be measured:'
+        print, 'Flag edges of spectral feature to be measured:'
         print, 'Left click LEFT edge of feature'
-        cp, x=x, y=y
-        ch1=round(x)                 ;scientific round
+        cursor, x, y, /DATA
+        print, 'x=', x,'', 'y=', y
+        oplot,[x,x],[-100,100], linestyle=2
+        ch1 = Value_Locate(velarr,x)
+        ; ch1=round(x)                 ;scientific round
         wait,0.5
         print, 'Left click RIGHT edge of feature'
-        cp, x=x, y=y
-        ch2=round(x)
-        flag,[ch1,ch2], linestyle=1
-        print,ch1,ch2,'chn'
+        cursor, x, y, /DATA
+        print, 'x=', x,'', 'y=', y
+        oplot,[x,x],[-100,100], linestyle=2
+        ch2 = Value_Locate(velarr,x)
+        ; ch2=round(x)
+        ; flag,[ch1,ch2], linestyle=1
         wait,0.5
 
         ;;flux
         w=abs(velarr[ch1]-velarr[ch2])
         vch=0.5*(ch1+ch2)
         dv=abs(velarr[vch]-velarr[vch+1]) ;channel width in km/s
+        print, dv
         dv_smo=dv*sqrt(smo*smo+2.0*2.0)   ; vel. res. of Hanning + boxcar smoothed spectrum
         print, ''
         print, 'channels 1,2 ', ch1,ch2
@@ -427,11 +445,13 @@ for j=0,xbin_tot-1 do begin
         ; print, "Estimate systematic errors caused by choice of signal boundaries "
         ; print,'Flag new boundary edges: '
         ; print, 'Left click LEFT edge '
-        ; cp, x=x, y=y
+        ; cursor, x, y, /DATA, /NORMAL
+        ; print, 'x=', x,'', 'y=', y
         chn1=-1
         ; wait,0.5
         ; print, 'Left click RIGHT edge '
-        ; cp, x=x, y=y
+        ; cursor, x, y, /DATA, /NORMAL
+        ; print, 'x=', x,'', 'y=', y
         chn2=x
         ; flag,[chn1,chn2], linestyle=1
         wait,0.5
@@ -459,7 +479,7 @@ for j=0,xbin_tot-1 do begin
             print,'flux [Jy]',totS/1000. ,' +/- ',totSerr_tot/1000. 
             ;;fill in structure
             stack.S.totS=totS
-            stack.S.totSerr_sys3totSerr_sys
+            ; stack.S.totSerr_sys3totSerr_sys
             stack.S.totSerr=totSerr_tot
             stack.spec.flx=spec
             stack.rms[2]=rms
@@ -486,7 +506,7 @@ for j=0,xbin_tot-1 do begin
             print,'M_HI/M* ',gf ,' +/- ',gf_err
             ;;fill in structure
             stack.GF.totGF=gf
-            print,'LOG(M_HI/M*) ',ALOG10(stack.GF.totGF) ,' +/- ',gf_err
+            print,'LOG(M_HI/M*) ',ALOG10(stack.GF.totGF)
             ; stack.GF.totGFerr_sys=double(2.356*10^4*10*totSerr_sys/1000.)
             stack.GF.totGFerr=gf_err 
             stack.spec.gf=spec

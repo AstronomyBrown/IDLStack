@@ -1,0 +1,30 @@
+
+------------------------------------------------------------------------------------
+The sdss inspection tool shows the user SDSS images centered
+on a series of AGC galaxies.  The images have the circles,
+indicating the photometric objects, overlaid on them:
+ -- The parent object is in red
+ -- The child objects are in light blue (green if images aren't inverted)
+    The three brightest children (by r-band magnitude) are labeled with 1, 2, 3
+ -- The objects without parents in the field are black (dark blue if not inverted)
+
+Once the user provides a quality code to the command prompt,
+the next galaxy is presented.  The possible codes are:
+ 'p' or 'par':     use the parent object
+ '1', '2', or '3': use one of the three brightest children
+ 'oly':            the brightest child is the only child associated with the galaxy
+ 'pb':             all photometric objects are problematic
+                   the user is then prompted for 'best': 1, 2, or 3.
+
+Other commands:
+ 'ns': The "best spectroscopic object" is wrong.
+       This sets spectroscopic id to 0.
+ 'oX': Change the image options according to the SDSS browser options
+       for example: 'oGLIS' is the default.  Set to 'oGLS' to un-invert images
+ 'xX': Remove the light from child object 'X' from calculations of total light.
+       Useful for times when a nearby star is labeled as child 1--type 'x1'
+ 'eX': Explore object 'X'.  Opens a firefox window to the DR7 explore page
+       for that photometric object. 'X' can be p, 1, 2, or 3.
+
+'h' or 'help': prints this readme file.
+------------------------------------------------------------------------------------

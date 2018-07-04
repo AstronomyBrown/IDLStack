@@ -1,0 +1,23 @@
+Overlaying sources on images in DS9
+by Krzysztof Findeisen
+Last modified 10/25/2006
+
+1. First make sure you have DS9 4.0 or later. Earlier versions 
+	(including 3.0.3, the current astrosun install) do not have 
+	catalog support.
+
+2. Load the image on which to overlay.
+
+3a. Execute an SDSS (or other database) query and store it in CSV format. 
+	The fields must include "objID" (which may not necessarily be the 
+	long SDSS ID -- just some kind of unique value) "ra", and "dec"
+3b. Run 
+
+4. In DS9, choose "Catalog Tool..." from the Analysis menu. From the 
+	window's File menu, choose "Load Other..." followed by "CSV". 
+	Select the file containing the query results.
+
+5. In the catalog window, choose "Advanced..." in the Symbol menu. Choose 
+	"Load..." from the new window's File menu, then choose sdss.sym. 
+	This will change the format to small circles labeled by the value 
+	of the "objID" column.

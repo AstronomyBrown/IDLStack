@@ -1,0 +1,154 @@
+.....README File ........................
+
+cms/24jan06
+
+Grouping catalogs have been revamped slightly.  We now have two
+separate group catalogs: Chris Marinoni's VDM catalog of the AGC
+north, and "grp_assign.gals"-type file which includes group
+assignments for SCI/SC2 groups and NOG groups.  It is the latter
+catalog that is discussed here.
+
+Everything remains pretty much as described by Riccardo in the section
+below.  However, note that we also have a slew of galaxies from the
+AGC that were added to existing NOG groups via the "supernog" process
+which is explained in detail in the file "supernog_doc.txt", and is
+also explained in Chapter 3 of my thesis (Springob 2005).  Such
+galaxies have the parameter "algthm" listed as "CS".
+
+Also, we've started attaching dates to the files in order to keep
+track of which one is most recent.  grp_assign040810.gals is the list
+of group assignments as of August 10th, 2004.  grp_assign060123.gals
+is the version as of January 23rd, 2006, which includes all of the
+modifications that Karen and I made when creating SFI++.  We looked at
+each SFI++ template cluster, and changed some of the group
+assignments, so those changes are all represented in
+grp_assign060123.gals.  Any galaxy for which we changed the group
+assignment has algthm='CK'.  Each of the grp_assign******.gals files
+is also now in J2000 format, while the "common.groups" and
+"nog3.groups" files are in B1950 format.
+
+
+rg/26jun01
+
+I - As of today, there are listings of 2 catalogs of groups:
+	- a "common.groups" catalog, which includes objects in G97 and
+	  Dale et al. plus A347, A426 and A539. That's 86 groups, with 
+	  parms as chosen by us
+	  Format:
+	  ngrp, grpra,sign,grpdec,vhel,vcmb,verr,name
+	  (i6,2i2.2,i3.3,a1,3i2.2,2i6,      i4,a)
+
+ 	Numbering system for common groups is
+	- if group is Abell cluster, the nr is that of Abell catalog
+	- if it is not Abell, then the number is
+		1hhnn
+	  where hh is the RA of the center in hrs, and nn is a progressive nr
+	  This will allow future additions in the AGC mode.
+	  NOTE: I have changed the parms of the group ESO 508 to match
+	  the specs in NOG3. They look better than those in G97. All the
+	  other groups are as in G97/Dale et al.
+
+	- a nog3 catalog, as produced by MH from the Giuricin et al
+	  (2000, ApJ 543, 178) paper, table 7. This catalog was
+	  produced with cz_lg. MH converted it to cz_hel via
+
+	  vlg = vh -79*cos(gl)*cos(gb) +296.*sin(gl)*cos(gb)-36.*sin(gb)
+
+	  and rg converted this cz_h to cz_cmb using Vhel_to_cmb.f
+          FORMAT:
+	  ngrp,ngrp,grpra,sign,grpdec,vhel,vcmb,ngals,name+grp notes
+	  (2i6,2i2.2,i3,3,a1,3i2,2i6,i4,a)
+	  Note that the group nr (ngrp) is >30000
+	  That's because we add 30000 to the group nr (3 is the id for nog3)
+	  
+
+II - Galaxies are assigned to either of those two group catalogs, in the
+	file grp_assign.gals
+ 	Only group/cluster members are listed here (in+ type gals are not)
+	This table has been built from one created by MH in
+		/home/esperanza3/galaxy/groups/grp_assign.gals
+	plus additions of all gals in the old 
+	/home/tanama/riccardo/sc/make/cluster_assign
+	which were not found in grp_assign.gals (gals in A347,A426,A539,
+	A1367,A1656,A2151/47,A2197/99 and A2634. [the file cluster_assign
+	was used as a cluster member file throughout the 90's]
+	For each galaxy, the coords of the galaxy, the group nr, the group cntr 
+	coords, the gal coords, the projected separation from the grp center in 
+	arcmin (clusep) and the grp vcmb are listed, for use by make programs.
+	FORMAT:
+	nagc,ngrp,grpra,grpdec,galra,galdec,sep,ivcmb,algthm,name
+	(i6, i6,            4f10.5,        f6.1,i6,1x,a2,a28)
+	where all parms are self-explanatory, except algthm (the algorithm
+	used in the group catalog construction for nog objects).
+
+	For groups that are in more than one catalog, priority is given
+	in the sense: 1. common.groups, 2. nog.
+	Say common.group 10101 is nog3.group 30053.
+	All galaxies either previously assigned to 10101 and those in
+	30053 are assigned to 10101 [i.e. in grp_assign.gals there should
+	be no trace left of reference to group 30053]
+
+III - Comparison of NOG3 groups and our previous "common group" settings
+
+I find a match between 22 NOG3 groups and our Common groups file.
+Parameters in general agree, except in a few notable cases. The table
+below has a comparison of the parms of those groups; first those in our
+Common groups file, then those in the nog3. Differences in <cz> larger
+than 100 km/s are found for the N383 and N507 groups, Cancer A, Cen30,
+A3574, Pegasus and A569. Most of those systems are in high density
+regions, where the group identification is difficult. The resulting
+Vpec are changed in all cases by less than one sigma. I think we
+should stick to our group def for the common groups, for consistency
+with our previous work, except for ESO508 for which as already said
+the nog3 parameters have been adopted
+
+      cg#    ra        dec    vh    vcmb  er nog3   ra       dec    vh    vcmb
+
+   1  10101 010430.0 +321200  5161  4865  32 30053 0106281 +320728  5009  4714  NGC 383 group (G97)         
+   2  10102 0120 0.0 +330400  5091  4808  99 30065 0120224 +331246  4823  4540  NGC 507 group (G97)         
+   3    262 014950.0 +355440  4918  4665  80 30102 0150186 +360120  5016  4763  A 262 (G97)                 
+   5  10301 0330 0.0 -213000  1665  1536  30 30202 0335210 -213042  1610  1488  Eridanus                    
+   6  10302 033634.0 -353642  1415  1321  45 30201 0334335 -352036  1437  1340  Fornax                      
+   7  10801 081730.0 +211400  4705  4939  80 30360 0817347 +210956  4834  5068  Cancer A                    
+  10  10804 081630.0 +220700  3604  3834  80 30359 0814299 +215020  3564  3793  Cancer D                    
+  83  10805 0815 0.0 +233000  4235  4461  80 30357 0813589 +232919  4210  4435  Cancer E                    
+  12   1060 103427.7 -271626  3733  4075  50 30494 1034220 -271818  3711  4053  A1060 = Hydra               
+  13  11101 110735.0 -371600  3000  3318  60 30533 1107225 -365921  2906  3225  NGC 3557                    
+  15  11102 1154 0.0 +485300   896  1101  40 30597 1149101 +520808   953  1141  Ursa Major                  
+  16   3526 1246 6.0 -410200  3041  3322 150 30670 1242050 -403248  3296  3581  A3526 = Cen30               
+  20   3574 1346 6.0 -300900  4548  4817  11 30753 1345570 -301430  4696  4964  A3574 = Klemola 27          
+      11301 130954.0 -230854  2900  3210 100 30706 1304375 -232815  2886  3199  ESO508                      
+  21  11401 140042.0 -334400  4197  4446 100 30770 1357510 -334106  4248  4499  S0753  (see Abell et al. 198
+  24  11801 1842 0.0 -632000  4470  4444  70 30929 1841180 -631224  4523  4498  S 805 = Pavo II             
+  25  12001 2013 0.0 -710000  4100  4055 100 30969 2013145 -710236  4009  3964  Pavo                        
+  26  12201 220018.0 -321400  2590  2317  75 31034 2159210 -321254  2600  2327  MDL59                       
+  27  12301 231742.6 +075557  3888  3519  80 31096 2317503 +080030  3542  3173  Pegasus                     
+  38    194 0123 0.0 -014600  5342  5036  37 30072 0125040 -013611  5316  5012  A 194                       
+  46    569 070524.0 +484200  5927  6011  43 30318 0707129 +485337  5697  5782  A 569                       
+  73   3656 195712.0 -384000  5750  5586  64 30957 1956500 -383306  5643  5479  A3656                       
+                     
+
+IV - How files were built.............
+
+a) Started from MH's common.groups, nog3.groups and grp_assign.gals
+
+b) Modified common.groups adding entries, vhel to vcmb and modifying format
+   Modified nog3.groups, adding vcmb and modifying format
+
+c) Modified grp_assign.gals to new.gals, which resets the group nrs
+   according to new convention as described above, and adding manually
+   galaxies in cluster_assign which did not make earlier version of 
+	grp_assign.gals
+
+d) Ran addra1.f on new.gals and common.groups, to include cluster coords
+   and group vcmb for gals in common.groups.
+		new.gals ==> step2.gals
+
+d) Ran addra2.f on step2.gals and nog3.groups, to include cluster coords
+   and group vcmb for gals in nog3.groups.
+		step2.gals ==> step3.gals
+
+e) Ran matchagc.f on step3.gals  ===> step4.gals = grp_assign.gals
+   and agc files to obtain galaxy coords and sepmin, the separation in
+   arcmin from the cluster/group center.
+

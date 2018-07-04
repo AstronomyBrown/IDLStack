@@ -1,0 +1,8 @@
+.comp robust_sigma
+.comp build_beam3
+.comp alfa_clean5
+.comp gridview2
+.comp cleanview
+.comp beamview
+.comp fieldview
+.comp cleanflux

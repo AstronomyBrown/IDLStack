@@ -1,0 +1,20 @@
+Arecibo Observatory IDL routines from Phil Perrilat
+
+			When	  Who	Notes
+
+Last update:		03Mar05   bk	PHil sent new /gen/pnt/juldaytolmst.pro this file updated
+
+Update history:         19Feb05	  bk	Phil's new was routines to handle new CIMA FITS format
+
+			28Oct04	  bk    
+
+			08Sep04   bk	Phil's update from 06Sep04 - new wasinit2 routines to 
+					analyze new data
+
+	                14Aug04   bk    Changes made to gen/pnt/alfabmpos.pro
+                                         for rotation angle keyword
+
+	                09Aug04   bk    General update from tar file
+	
+            		06Aug04   bk    Phil's ALFA beam position routine added
+

@@ -1,0 +1,297 @@
+<html>
+	<head>
+	<title>VOTables Introduction</title>
+	</head>
+<body bgcolor="ffffff">
+
+<h2>An Introduction to VOTables: Accessing Sloan Images</h2>
+
+<a href="#introduction">Introduction to SIAP</a><p>
+<a href="#using">Using the SIAP to download VOTables in XML Format</a><p>
+<a href="#siapcall">Accessing FITS Images Using siapcall</a><p>
+<a href="#xml">Accessing FITS Images from XLM-Format VOTables</a><p>
+<a href="#example">An example (downloading g-band images)</a><p>
+
+<a href="#links">Some useful links</a>
+
+<p>
+Images and spectra from each Sloan data release are available on the web, and since SDSS follows the Virtual Observatory protocols, it should 
+be simple to access and download such information using a set of tools in IDL's VOlib library.
+
+This tutorial covers the basics of retrieving images, using SDSS DR4's SIAP (Simple Image Access Protocol). Many 
+projects participating in the 
+VO provide SIAPs, and SDSS provides other methods of getting at their data, but the SIAP is the simplest way to get at the FITS files. The 
+tutorial will introduce the SIAP/VOTable concept, demonstrate how to download VOTables in XML format by hand (in a browser) or in IDL code, and 
+will show how to use the VOTable XML format to locate and download FITS images from Sloan DR4. Sample code for obtaining g-band Sloan images at 
+a list of coordinates is included. <p>
+
+<UL>
+<LI>Note that the SIAP will attempt to retrieve <b>all</b> the images that meet your search criteria. This means that you will get all of the 
+images from a given survey/project that include the point you specified as your "center." Depending on how that particular project mapped that 
+particular part of the sky, you might get several sets of overlapping images of varying sizes.
+<LI>This may not be particularly useful for certain ALFALFA applications, such as searching for the SDSS FITS images of a particular ALFALFA 
+object.
+</UL>
+
+<p>
+<h3><u><a name="introduction">Introduction to SIAP</a></u></h3><p>
+There are two ways to retrieve images from the SDSS DR4 SIAP service. 
+<OL>
+<LI>Use the SIAP webpage to create an XML table. This can then be read into IDL using a VOlib utility called "readvot," so that you can 
+download gzipped FITS images.
+<LI>Use the VOlib utility "siapcall," which will call the SDSS SIAP for you and download/unzip the images.
+</OL>
+
+The advantage of (2) is that it's faster and requires less interaction/coding on your part; the advantage of (1) is that it's more 
+customizable, and you can do a lot without having to make any changes to the VOlib codes. Once you get acquainted with the VOtables, and write 
+some short bits of code to make your own easier, (1) can become just as easy.
+
+<p>
+
+To get started, you need to identify the URL of the SIAP you want to use. You can do this by searching <a 
+href="http://nvo.stsci.edu/voregistry/index.aspx">the Virtual Observatory Data and Service locator</a>. Enter a search term; in this case, 
+"SDSS DR4" will get us what we need. The first result is the for DR4 SIAP; click the <a 
+href="http://nvo.stsci.edu/voregistry/UpdateRegistry.aspx?SearchIdentifier=ivo%3a%2f%2fsdss.jhu%2fservices%2fSIAPDR4-images&ro=t">link</a>. 
+This page lists a bunch of useful VO information about the SDSS DR4 SIAP, including a description. What's useful for us is the ServiceURL, 
+listed in the middle of the page.
+<p>
+
+<u><h3><a name="using">Using the SIAP to download VOTables in XML Format</a></h3></u><p>
+
+The SIAP URL is the key to using the SIAP service. It's what you use to download XML files or the input you use for siapcall.pro. In this case, 
+the URL is <p>
+<b>http://casjobs.sdss.org/vo/DR4SIAP/SIAP.asmx/getSiapInfo?&FORMAT=image/fits&BANDPASS=ugriz&
+</b>
+<p>
+
+This URL accepts the usual "cone search" parameters to create a VOTable-formatted XML file. If you want, you can use this URL to manually 
+download the XML VOTable (or you can have the Linux command wget do it for you, which we'll try in a bit). To get the XML file, you need to add 
+a position (RA, Dec in J2000 decimal degrees) and a search radius (in decimal degrees) into the URL as "POS" and "SIZE" keywords. The "FORMAT" 
+keyword is already in the SIAP URL, letting the service know that you're interested in FITS images. POS and SIZE are added in a similar way. 
+For a position RA=180.0, Dec=0.12, and a search radius of 0.1, enter the URL:<p>
+<b><a 
+href="http://casjobs.sdss.org/vo/DR4SIAP/SIAP.asmx/getSiapInfo?POS=180.0,.12,&SIZE=0.1&FORMAT=image/fits&BANDPASS=ugriz&">http://casjobs.sdss.org/vo/DR4SIAP/SIAP.asmx/getSiapInfo?POS=180.0,.12,&SIZE=0.1&FORMAT=image/fits&BANDPASS=ugriz&</a>
+</b>
+<p>
+
+Click the above link to see the XML output provided by this URL. It contains a header, and then a list of the available images meeting your 
+search criteria. This information tells you (or IDL) where the images are located, both in "Sloan DR4 Space" and on the web. Let's save this 
+XML file so we can play with it; call it "file1.xml." <p>
+<UL>
+<LI>Note that in the URL given above, and given in the VO registry, the "bandpass" keyword is already included, but this can be edited. If you 
+only want, for instance, g-band images, you can delete the u, r, i, and z in the "bandpass" keyword. This altered URL will work whether you 
+call it by hand or give it to a VOlib utility as an input. </UL>
+<p>
+
+There is another way to get the same XML file; this time, we'll call it "file2.xml." This time, we'll use the command "wget" to download 
+the file directly, without having to use a browser. By invoking the IDL command "spawn," we can do this within any other piece of code we 
+like. Start up an IDL session:
+
+<pre> IDL> spawn, 'wget -q -O file2.xml "http://casjobs.sdss.org/vo/DR4SIAP/SIAP.asmx/getSiapInfo?POS=180.0,.12,&SIZE=0.1&FORMAT=image/fits&BANDPASS=ugriz&"'  </pre>
+
+In the above call, file2.xml is the name we want to give to the downloaded XML file. The command wget needs to be completely enclosed in single 
+quotes, and the URL is enclosed in double quotes. Again, we could specify g-band images by deleting the u, r, i, and z from the bandpass 
+options. <b>file2.xml should be identical to file1.xml</b>.
+
+<p>
+If you want to write a piece of code that will download the XML file for you for several different right ascension and declination pairs, you 
+need to make sure to convert RA and dec to strings, but you also need to use strcompress to remove <i>all</i> whitespace so it won't screw up 
+the URL. The simplest code to do this would be:
+<p>
+
+<pre>
+   PRO GETIMAGES,radegs,decdegs
+
+   spawn, 'wget -q -O file_1.xml "http://casjobs.sdss.org/vo/DR4SIAP/SIAP.asmx/getSiapInfo?POS='+strcompress(radegs, /remove_all)+','+strcompress(decdegs,/remove_all)+'&SIZE=0.1&FORMAT=image/fits&BANDPASS=ugriz&"'
+  
+   end
+</pre>
+
+It might also be useful to be able to use the coordinates in the filename:
+
+<pre>
+
+    PRO GETIMAGES,radegs,decdegs
+                                                                                                                                                                                                                                
+    filename=strcompress(radegs,/remove_all)
+    print,filename
+ 
+    ;in order to insert the string 'filename' into a command called using
+    ;single quotes, use the '+ as below:                                                                                                                                                                                                                               
+    spawn, 'wget -q -O '+filename+'.xml "http://casjobs.sdss.org/vo/DR4SIAP/SIAP.asmx/getSiapInfo?POS='+strcompress(radegs, /remove_all)+','+strcompress(decdegs,/remove_all)+'&SIZE=0.1&FORMAT=image/fits&BANDPASS=ugriz&"'
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
+    end
+
+</pre>
+
+<p>
+Since we need to use single quotes inside of single quotes, we use <b>'+</b> and <b>+'</b>. 
+<p>
+In the example at the end, we will look at some code that loops over many RA/dec pairs and that gives a different directory name to the images 
+downloaded from each coordinate.
+
+<p>
+
+Once you have these XML files downloaded, you can use some utilities in the IDL VO library to download the FITS images. But before we get to 
+that, let's look at a streamlined (but not easily customizable) way to get straight to your images:
+
+<h3><u><a name="siapcall">Accessing FITS Images Using siapcall</a></u></h3><p>
+
+
+Instead of downloading XML files in this way, you can also use a bit of code that comes with the VO IDL library, called siapcall. You can 
+look at its documentation <a href="http://www.ctio.noao.edu/~chrism/VOlib/VOlib_help.html#SIAPCALL">here</a> (or see the list of <a 
+href="#links">links</a> below).
+<UL>
+<LI>This code basically does what we just learned to do: it calls the SIAP service for a location on the sky. But then it goes further and 
+downloads the images for you. This is very useful, but if you need to customize it -- say, you want to be able to change the filenames, or you 
+want to run it over a serious of different locations -- you'll need to write some specialized code to do that and you might have to make your 
+own "proprietary version" of SIAPCALL. Additionally, SIAPCALL requires some interaction from the user, making it more difficult to use in 
+looping over many coordinate pairs. 
+<LI>SIAPCALL is called by first defining the URL of the SIAP service, i.e. <pre>    
+IDL>url='http://casjobs.sdss.org/vo/DR4SIAP/SIAP.asmx/getSiapInfo?&FORMAT=image/fits&BANDPASS=ugriz&' </pre> You also need to provide an output 
+structure as well as the input parameters RA, dec, and search radius in degrees, like:
+<pre>    IDL>siapcall, str=str, url=url, 180.0,0.12,0.1 </pre>
+You will get some funny errors about converting strings to doubles, but this is apparently normal. You will also be prompted to delete some 
+files as you go through (but if you want to save the XML file, use the /SAVE keyword), including some image files.
+<LI> For the example given, you should have downloaded 10 images, numbered 0 through 9. This includes 2 different portions of the sky imaged in 
+5 different bands. If you're unfamiliar with the FITS file format, BK 
+found <a href="http://fits.gsfc.nasa.gov/fits_samples.html"> a neat site with sample FITS files that can be 'viewed' through a Java applet</a>.
+ </UL>
+
+So now that you've seen what the VOTables library can do, how can you get at the information in all those XML files I had you download?
+
+<p>
+
+<h3><u><a name="xml">Accessing FITS Images from XML-Format VOTables</a></u></h3>
+<p>
+Using the utility "readvot" (see the <a href="http://www.ctio.noao.edu/~chrism/VOlib/VOlib_help.html#READVOT">documentation</a>), you can read 
+your XML file into an IDL structure. You call it as <pre>    IDL>readvot,'file1.xml',str</pre> where "str" will be the name of the output 
+structure. <pre>    IDL>print,n_elements(str)</pre> shows you that you have 10 elements, corresponding to the 10 images found for this region 
+using "siapcall."
+<pre>    IDL>help,str,/str</pre> shows you the various elements of the structure, including the RA, Dec, and (helpfully) the URL where Sloan is 
+storing these images. <pre>    IDL>print,str.URL</pre> will display
+<pre>
+    http://das.sdss.org/DR4/data/imaging/752/40/corr/4/fpC-000752-u4-0243.fit.gz
+    http://das.sdss.org/DR4/data/imaging/752/40/corr/4/fpC-000752-g4-0243.fit.gz
+    http://das.sdss.org/DR4/data/imaging/752/40/corr/4/fpC-000752-r4-0243.fit.gz
+    http://das.sdss.org/DR4/data/imaging/752/40/corr/4/fpC-000752-i4-0243.fit.gz
+    http://das.sdss.org/DR4/data/imaging/752/40/corr/4/fpC-000752-z4-0243.fit.gz
+    http://das.sdss.org/DR4/data/imaging/752/40/corr/4/fpC-000752-u4-0244.fit.gz
+    http://das.sdss.org/DR4/data/imaging/752/40/corr/4/fpC-000752-g4-0244.fit.gz
+    http://das.sdss.org/DR4/data/imaging/752/40/corr/4/fpC-000752-r4-0244.fit.gz
+    http://das.sdss.org/DR4/data/imaging/752/40/corr/4/fpC-000752-i4-0244.fit.gz
+    http://das.sdss.org/DR4/data/imaging/752/40/corr/4/fpC-000752-z4-0244.fit.gz
+</pre>
+
+These can then be retrieved very easily using the wget commend on every element of the array:
+<pre>
+    ;----------------
+    pro dlImages, str
+
+
+    for i=0,n_elements(str)-1 do begin
+
+    spawn, 'wget -q -O file'+strcompress(i, /remove_all)+'.fits.gz "'+str[i].url[0]+'"'
+
+    endfor
+
+    end
+    ;-------------------------------------
+
+</pre>
+
+You can then use gunzip on all of the FITS files in order to view them.
+
+<p>
+
+<h3><u><a name="example">Example: Use a list of AGC numbers & coordinates to retrieve g-band images from Sloan DR4</a></u></h3>
+<p>
+Let's apply this to a specific task: using a list of coordinates to retrieve images. Since we're looking at many different places in the sky, 
+it will be helpful to sort the images into different directories, using something like their RA to name them. We also want to gunzip the images 
+in the final step.
+<p>
+Here are the coordinates we'll use:
+
+<pre>
+    258046 1500192+005700 15.005333 0.9500000
+    253623 1501009+010050 15.016917 1.0138889
+    254077 1501159+014625 15.021083 1.7736111
+    253632 1502330+015608 15.042500 1.9355556
+    253620 1500526+012418 15.014611 1.4050000
+    253624 1501153+012954 15.020917 1.4983333
+    252565 1506420+003804 15.111667 0.6344444
+    252560 1509149+015517 15.154139 1.9213889
+    253656 1512082+013509 15.202278 1.5858333 
+
+</pre>
+Put these coordinates into a file called coords.dat.
+<p>
+I have written some code (see example.pro, below) which will access coords.dat and, for each location, create a directory. The 
+name of the directory is the RA in degrees, but this could easily be changed to the AGC (or NGC, VCC, etc.) number or the full coordinate 
+string. The code then downloads the XML file, uses readvot to download the images into the correct directory, and finally gunzips the files.
+<p><hr>
+<pre>
+PRO example
+
+readcol,'coords.dat',agcnum,coordstring,rahr,decdeg,format='L,A,F,F'
+
+radeg=rahr*15.0
+
+;print,radeg
+;print,decdegs
+
+numpos=n_elements(radeg)
+xstr='.xml'
+
+;for each line in the file:
+for i=0, numpos-1 do begin
+	radegs=radeg[i]
+	decdegs=decdeg[i]
+	;create a 'filename' that will be used as the directory name for each line of coords.dat
+	;the filename of the xml file will be radegs.xml
+	filename=strcompress(radegs,/remove_all)
+	print,'Filename: ',filename
+	;make the directory
+	spawn,'mkdir '+filename+''
+	filexml=filename+xstr
+	print,'File: ',filexml
+	;download & name the XML file
+	spawn, 'wget -q -O '+filename+'.xml "http://casjobs.sdss.org/vo/DR4SIAP/SIAP.asmx/getSiapInfo?POS='+strcompress(radegs,/remove_all)+','+strcompress(decdegs,/remove_all)+'&SIZE=0.1&FORMAT=image/fits&BANDPASS=g&"'
+	;use readvot to read the XML file
+	readvot,filexml,str
+	;for each file found in the search, download the fits files
+	for j=0,n_elements(str)-1 do begin
+		spawn,'wget -q -O '+filename+'/file'+strcompress(j, /remove_all)+'.fits.gz "'+str[j].url[0]+'"'
+	endfor
+	;gunzip the fits files
+	spawn,'gunzip '+filename+'/*.gz'
+endfor
+
+end
+</pre>
+<hr>
+<p>
+Note that the URL of the SIAP service is "hard-wired" in and couldn't be a user-provided input without setting the code up to split the URL 
+string in the right place. But this could be done!
+
+<p>
+<h3><u>
+<a name="links">Links</a>
+</u></h3>
+
+<b>
+<a href="http://www.us-vo.org/pubs/faq.cfm">NVO Frequently Asked Questions</a><p>
+<a href="http://nvo.stsci.edu/voregistry/index.aspx">The VO Registry (for finding the various VO services offered by a project)</a><p>
+<a href="http://nvo.stsci.edu/voregistry/UpdateRegistry.aspx?SearchIdentifier=ivo%3a%2f%2fsdss.jhu%2fservices%2fSIAPDR4-images&ro=t">The SDSS 
+DR4 SIAP Service Registry page</a><p>
+<a href=" http://www.ctio.noao.edu/~chrism/VOlib/software.html">The VO IDL Software Libraries (here you can view the documentation and the code 
+for the commonly used IDL procedures in VOlib, including readvot.pro and siapcall.pro)</a><p>
+<a href="http://fits.gsfc.nasa.gov/fits_samples.html">Sample FITS files</a><p>
+</b>
+
+<p><p><hr>
+<address><font color=#cc0f14> This page created and maintained by amartin.</font></address>
+
+</font>
+</body>
+</html>

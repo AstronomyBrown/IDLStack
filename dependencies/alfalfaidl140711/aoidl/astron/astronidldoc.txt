@@ -1,0 +1,12 @@
+IDL USER'S LIBRARY UPDATE LOG
+
+http://idlastro.gsfc.nasa.gov/homepage.html
+
+			When		Who	Notes
+
+Last Update:		28Oct04		bk				
+
+Update History		09Aug04		bk	
+			06Aug04		bk
+			02Aug04		bk
+		   	23Jul04		bk

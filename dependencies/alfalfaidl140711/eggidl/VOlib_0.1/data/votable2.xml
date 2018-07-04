@@ -1,0 +1,101 @@
+<?xml version="1.0"?>
+<!DOCTYPE VOTABLE SYSTEM "http://us-vo.org/xml/VOTable.dtd">
+<VOTABLE ID="v1.0">
+  <DEFINITIONS>
+    <COOSYS system="eq_FK5" equinox="2000"/>
+  </DEFINITIONS>
+    
+  <RESOURCE ID="T9001">
+     <DESCRIPTION>
+       HEASARC Browse data service
+       Please send inquiries to mailto:request@athena.gsfc.nasa.gov
+    </DESCRIPTION>
+    <PARAM ID="default_search_radius" ucd="OBS_ANG-SIZE" value="0.0166666666666667"/>
+    <TABLE ID="heasarc_bsc5p_9001">
+      <DESCRIPTION> Bright Star Catalog </DESCRIPTION>
+      
+      <FIELD name="unique_id" datatype="int" ucd="ID_MAIN">
+        <DESCRIPTION> Integer key </DESCRIPTION>
+      </FIELD>
+      
+      <FIELD name="name" datatype="char" arraysize="*">
+        <DESCRIPTION>   </DESCRIPTION>
+      </FIELD>
+      
+      <FIELD name="alt_name" datatype="char" arraysize="*">
+        <DESCRIPTION> Alternate Name (usually Bayer and/or Flamsteed) </DESCRIPTION>
+      </FIELD>
+      
+      <FIELD name="ra" datatype="double" unit="degree" ucd="POS_EQ_RA_MAIN">
+        <DESCRIPTION> Right Ascension, J2000 </DESCRIPTION>
+      </FIELD>
+      
+      <FIELD name="dec" datatype="double" unit="degree" ucd="POS_EQ_DEC_MAIN">
+        <DESCRIPTION> Declination, J2000 </DESCRIPTION>
+      </FIELD>
+      
+      <FIELD name="vmag" datatype="float">
+        <DESCRIPTION> Photographic Magnitude </DESCRIPTION>
+      </FIELD>
+      
+      <FIELD name="multiple" datatype="char" arraysize="*">
+        <DESCRIPTION> Double or Multiple System Flag </DESCRIPTION>
+      </FIELD>
+      
+      <FIELD name="class" datatype="char" arraysize="*">
+        <DESCRIPTION> Browse Classification </DESCRIPTION>
+      </FIELD>
+      
+      <FIELD name="Search_Offset" datatype="double" unit="'">
+        <DESCRIPTION> Offset of target/observation from query center </DESCRIPTION>
+      </FIELD>
+	
+	
+      <DATA>
+        <TABLEDATA>
+<TR><TD>4707</TD><TD>HR 4580</TD><TD/><TD>179.76420</TD><TD>0.53060</TD><TD> 6.17</TD><TD/><TD>STAR K2IV</TD><TD>31.517</TD></TR>
+<TR><TD>4709</TD><TD>HR 4555</TD><TD/><TD>178.45960</TD><TD>0.55190</TD><TD> 6.30</TD><TD/><TD>STAR F0V</TD><TD>96.247</TD></TR>
+<TR><TD>4786</TD><TD>HR 4540</TD><TD>5Bet Vir</TD><TD>177.67380</TD><TD>1.76470</TD><TD> 3.61</TD><TD>W</TD><TD>STAR F9V</TD><TD>146.880</TD></TR>
+<TR><TD>4803</TD><TD>HR 4626</TD><TD>10    Vir</TD><TD>182.42210</TD><TD>1.89780</TD><TD> 5.95</TD><TD>W</TD><TD>STAR K3III</TD><TD>154.943</TD></TR>
+<TR><TD>4937</TD><TD>HR 4585</TD><TD>7    Vir</TD><TD>179.98710</TD><TD>3.65530</TD><TD> 5.37</TD><TD/><TD>STAR A1V</TD><TD>159.320</TD></TR>
+<TR><TD>4530</TD><TD>HR 4591</TD><TD/><TD>180.25750</TD><TD>-1.76810</TD><TD> 6.31</TD><TD/><TD>STAR</TD><TD>166.803</TD></TR>
+<TR><TD>4649</TD><TD>HR 4533</TD><TD/><TD>177.25500</TD><TD>-0.31860</TD><TD> 6.15</TD><TD/><TD>STAR F7V</TD><TD>182.711</TD></TR>
+<TR><TD>4444</TD><TD>HR 4613</TD><TD/><TD>181.49920</TD><TD>-3.13170</TD><TD> 6.37</TD><TD/><TD>STAR</TD><TD>263.705</TD></TR>
+<TR><TD>4616</TD><TD>HR 4681</TD><TD>13    Vir</TD><TD>184.66790</TD><TD>-0.78720</TD><TD> 5.90</TD><TD/><TD>STAR A5V</TD><TD>299.889</TD></TR>
+<TR><TD>4622</TD><TD>HR 4689</TD><TD>15Eta Vir</TD><TD>184.97670</TD><TD>-0.66690</TD><TD> 3.89</TD><TD>D</TD><TD>STAR A2IV</TD><TD>314.895</TD></TR>
+<TR><TD>5064</TD><TD>HR 4629</TD><TD>11    Vir</TD><TD>182.51420</TD><TD>5.80690</TD><TD> 5.72</TD><TD/><TD>STAR F2III</TD><TD>325.339</TD></TR>
+<TR><TD>4909</TD><TD>HR 4695</TD><TD>16    Vir</TD><TD>185.08750</TD><TD>3.31250</TD><TD> 4.96</TD><TD>W</TD><TD>STAR K0III</TD><TD>335.089</TD></TR>
+<TR><TD>5116</TD><TD>HR 4589</TD><TD>8Pi  Vir</TD><TD>180.21830</TD><TD>6.61420</TD><TD> 4.66</TD><TD>S</TD><TD>STAR A5V</TD><TD>337.105</TD></TR>
+<TR><TD>4614</TD><TD>HR 4471</TD><TD>91Ups Leo</TD><TD>174.23710</TD><TD>-0.82390</TD><TD> 4.30</TD><TD>D</TD><TD>STAR G8III</TD><TD>362.664</TD></TR>
+<TR><TD>4496</TD><TD>HR 4484</TD><TD/><TD>174.60040</TD><TD>-2.43610</TD><TD> 6.22</TD><TD/><TD>STAR G9III</TD><TD>383.949</TD></TR>
+<TR><TD>5112</TD><TD>HR 4517</TD><TD>3Nu  Vir</TD><TD>176.46500</TD><TD>6.52940</TD><TD> 4.03</TD><TD/><TD>STAR M1III</TD><TD>393.477</TD></TR>
+<TR><TD>4390</TD><TD>HR 4678</TD><TD/><TD>184.54000</TD><TD>-3.94860</TD><TD> 6.54</TD><TD/><TD>STAR F2V</TD><TD>402.822</TD></TR>
+<TR><TD>4388</TD><TD>HR 4677</TD><TD/><TD>184.53790</TD><TD>-3.95440</TD><TD> 6.99</TD><TD/><TD>STAR F3V</TD><TD>402.993</TD></TR>
+<TR><TD>4297</TD><TD>HR 4544</TD><TD/><TD>177.75920</TD><TD>-5.33330</TD><TD> 5.64</TD><TD>D</TD><TD>STAR K0III</TD><TD>403.027</TD></TR>
+<TR><TD>4891</TD><TD>HR 4455</TD><TD>89    Leo</TD><TD>173.59170</TD><TD>3.06000</TD><TD> 5.77</TD><TD/><TD>STAR F5V</TD><TD>403.626</TD></TR>
+<TR><TD>5022</TD><TD>HR 4708</TD><TD>17    Vir</TD><TD>185.63330</TD><TD>5.30560</TD><TD> 6.40</TD><TD/><TD>STAR F8V</TD><TD>424.947</TD></TR>
+<TR><TD>5223</TD><TD>HR 4559</TD><TD>6    Vir</TD><TD>178.76290</TD><TD>8.44390</TD><TD> 5.58</TD><TD/><TD>STAR</TD><TD>452.710</TD></TR>
+<TR><TD>5248</TD><TD>HR 4608</TD><TD>9Omi Vir</TD><TD>181.30210</TD><TD>8.73310</TD><TD> 4.12</TD><TD/><TD>STAR G8III</TD><TD>470.461</TD></TR>
+<TR><TD>5209</TD><TD>HR 4528</TD><TD>4    Vir</TD><TD>176.97870</TD><TD>8.24580</TD><TD> 5.32</TD><TD>W</TD><TD>STAR A1</TD><TD>470.754</TD></TR>
+<TR><TD>5212</TD><TD>HR 4515</TD><TD>2Xi  Vir</TD><TD>176.32120</TD><TD>8.25830</TD><TD> 4.85</TD><TD/><TD>STAR A4V</TD><TD>487.848</TD></TR>
+<TR><TD>4873</TD><TD>HR 4418</TD><TD>84Tau Leo</TD><TD>171.98420</TD><TD>2.85610</TD><TD> 4.95</TD><TD>W</TD><TD>STAR G7III</TD><TD>493.387</TD></TR>
+<TR><TD>4453</TD><TD>HR 4432</TD><TD>87    Leo</TD><TD>172.57880</TD><TD>-3.00360</TD><TD> 4.77</TD><TD/><TD>STAR K3III</TD><TD>505.796</TD></TR>
+<TR><TD>4534</TD><TD>HR 4419</TD><TD/><TD>171.97380</TD><TD>-1.70000</TD><TD> 6.25</TD><TD>W</TD><TD>STAR</TD><TD>508.039</TD></TR>
+<TR><TD>4886</TD><TD>HR 4414</TD><TD>83    Leo</TD><TD>171.68880</TD><TD>3.01310</TD><TD> 6.50</TD><TD/><TD>STAR K0IV</TD><TD>512.769</TD></TR>
+<TR><TD>4195</TD><TD>HR 4510</TD><TD/><TD>175.97960</TD><TD>-6.67720</TD><TD> 6.07</TD><TD/><TD>STAR</TD><TD>519.750</TD></TR>
+<TR><TD>4133</TD><TD>HR 4598</TD><TD/><TD>180.71500</TD><TD>-7.68360</TD><TD> 6.22</TD><TD/><TD>STAR K5</TD><TD>522.770</TD></TR>
+<TR><TD>5199</TD><TD>HR 4483</TD><TD>1Ome Vir</TD><TD>174.61500</TD><TD>8.13420</TD><TD> 5.36</TD><TD/><TD>STAR M4III</TD><TD>535.559</TD></TR>
+<TR><TD>4346</TD><TD>HR 4746</TD><TD/><TD>186.96500</TD><TD>-4.61530</TD><TD> 6.22</TD><TD/><TD>STAR A8</TD><TD>536.507</TD></TR>
+<TR><TD>4768</TD><TD>HR 4400</TD><TD>79    Leo</TD><TD>171.00960</TD><TD>1.40780</TD><TD> 5.39</TD><TD>D</TD><TD>STAR G8III</TD><TD>539.858</TD></TR>
+<TR><TD>4949</TD><TD>HR 4410</TD><TD>80    Leo</TD><TD>171.45830</TD><TD>3.86000</TD><TD> 6.37</TD><TD/><TD>STAR F3IV</TD><TD>539.979</TD></TR>
+<TR><TD>4680</TD><TD>HR 4394</TD><TD/><TD>170.82500</TD><TD>0.13170</TD><TD> 6.05</TD><TD/><TD>STAR K3</TD><TD>552.928</TD></TR>
+<TR><TD>5259</TD><TD>HR 4478</TD><TD/><TD>174.54080</TD><TD>8.88420</TD><TD> 6.17</TD><TD/><TD>STAR K1III</TD><TD>574.543</TD></TR>
+<TR><TD>4797</TD><TD>HR 4807</TD><TD/><TD>189.59330</TD><TD>1.85470</TD><TD> 5.71</TD><TD/><TD>STAR M3III</TD><TD>577.694</TD></TR>
+<TR><TD>4905</TD><TD>HR 4805</TD><TD/><TD>189.51830</TD><TD>3.28250</TD><TD> 6.33</TD><TD/><TD>STAR A1V</TD><TD>586.863</TD></TR>
+<TR><TD>5360</TD><TD>HR 4650</TD><TD>12    Vir</TD><TD>183.35790</TD><TD>10.26220</TD><TD> 5.85</TD><TD/><TD>STAR A2</TD><TD>590.719</TD></TR>
+<TR><TD>4313</TD><TD>HR 4772</TD><TD/><TD>187.91130</TD><TD>-5.05250</TD><TD> 6.19</TD><TD/><TD>STAR</TD><TD>597.248</TD></TR>
+         </TABLEDATA>
+       </DATA>
+     </TABLE>
+   </RESOURCE>
+</VOTABLE>

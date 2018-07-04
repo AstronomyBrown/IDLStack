@@ -1,0 +1,6 @@
+cp -p /home/phil/idl/test/was2/sl_mkarchive.pro .
+cp -p /home/phil/idl/test/was2/wasftochdr.pro .
+cp -p /home/phil/idl/test/was2/washdr.pro .
+cp -p /home/phil/idl/test/was2/waslist.pro .
+cp -p /home/phil/idl/test/was2/wasopen.pro .
+cp -p /home/phil/idl/test/was2/waspwr.pro .

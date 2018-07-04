@@ -1,0 +1,83 @@
+Very simple continuum matching procedures
+Brian Kent, June 2008
+
+** NOTE: This file is linked on the LOVEDATA idl docs page: 
+**    http://caborojo.astro.cornell.edu/alfalfalog/idldocs/continuumfit.txt
+** If you change this one, change that one too!
+
+cont_find.pro - program that identifies continuum sources
+                  and creates a "continuum" table.  Refer
+                  to the beginning of the file for instructions.
+
+cont_script.pro - simple script to run multiple grids in batch
+
+create_table.pro - stitch together results from multiple grids.
+                   Also removes duplicates.
+
+plot_cont_table.pro - simple plot of a table structure
+
+---------------------------------
+Example session:
+
+RUNNING ONE GRID:
+
+ IDL> @alfinit
+ IDL> restore, '/home/dorado3/galaxy/idl_alfa/nvsscat_alfalfa.sav'
+ IDL> restore, '/home/culebra/galaxy/grids/1220+09/gridbf_1220+09b.sav'
+ IDL> .com cont_find.pro
+ IDL> cont_find, grid, nvsscat, cont_table
+
+RUNNING MULTIPLE GRIDS AND SAVING THE RESULTS:
+
+ IDL> @alfinit
+ IDL> .com cont_find.pro
+ IDL> .com cont_script.pro
+ IDL> restore, '/home/dorado3/galaxy/idl_alfa/nvsscat_alfalfa.sav'
+ IDL> cont_script, nvsscat, ['1220','1228','1236'], ['09','11'], '/home/culebra/galaxy/grids/'
+ IDL> .com create_table.pro
+ IDL> create_table, ['1220','1228','1236'], ['09','11'], cont_table_final
+ IDL> .com plot_cont_table.pro
+ IDL> plot_cont_table, cont_table_final
+
+NEW!!!!!!!!!!
+
+To obtain the coefficients of the polynomal fit for the pointing corrections:
+
+ IDL> .com plot_cont_table_publish.pro
+ IDL>  decmin=7.5  ;decimal degrees for the area of sky you're interested in MIN
+ IDL>  decmax=16.5 ;decimal degrees for the area of sky you're interested in MAX
+ IDL> plot_cont_table_publish, cont_table_final, decmin, decmax, coefra, coefdec
+
+Two postscript documents will be created: continuumall.ps and continuumavg.ps
+
+The structure (with values as described in cont_find.pro) looks as follows:
+
+   NVSSID          LONG            298342
+   RA_CEN          DOUBLE           12.271767
+   DEC_CEN         DOUBLE           8.4209397
+   PEAK_INT        DOUBLE           206.63740
+   PEAK_INTERP     DOUBLE           190.76649
+   NVSS_RA         DOUBLE           12.271727
+   NVSS_DEC        DOUBLE           8.4180149
+   NVSS_PEAK_INT   DOUBLE           179.81673
+   NVSSERROR       DOUBLE           5.4223332
+   MAJOR_AX        DOUBLE         0.013561727
+   MINOR_AX        DOUBLE         0.012839431
+   COEFF           DOUBLE    Array[7]
+   FLAG            INT              3
+   MAXFLUX         DOUBLE           199.95790
+   CORRECTEDFLUX   DOUBLE           205.05166
+   SUMCORRECTEDFLUX
+                   DOUBLE           206.33431
+
+
+The NVSS values are as explained in the Condon et al. techincal document
+about the NVSS survey, and are found in the main NVSS survey binary FITS table.
+
+
+
+
+
+
+
+

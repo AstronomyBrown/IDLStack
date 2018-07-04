@@ -1,0 +1,110 @@
+<html>
+<head>
+  <title> The Arecibo Legacy Fast ALFA Survey</title>
+</head>
+<body bgcolor=white>
+<!-- PAGE CONTENT BEGINS HERE -->
+
+<h3><font color=#008000>Making Contour Diagrams and Overlays</font></h3>
+
+<ul>
+<p> There are three steps to making overlays. First a contour must be made, second, an image must be made and third, overlay the contour and image. This page will aid someone in making beautiful <a href="1436+05a.jpg"> contour diagrams</a> and <a href="1436+05.jpg"> overlays</a>. </p>
+
+<dt> <b> <font color=#008000>Creating Contours</font> </b>
+<p>To prepare the contour, first you need to restore the grid. If you don't know what grid your object is located in, use 
+<a href="findgrid.pro"> findgrid.pro</a> 
+to find the correct grid. You can then open up gridview to find the minimum and maximum channels of your objects. 
+
+<p><code>IDL> restore,'/home/vieques2/galaxy/grids/1436+05/gridbf_1436+05a.sav'</code></p>
+<p><code>IDL> gridview,grid</code></p>
+
+<p> Once you have the grid restored and the minimum and maximum channels for your particular object, you can run contourplot:
+
+<p><code>IDL> contourplot,grid,296,358</code></p>
+
+<p>The contour levels will need to be adjusted according to your image. These are not trivial but the program has a good first guess and from there you can adjust them according to your particular object. The program is set up to print the minimum and maximum z values. You can use these values to help decide on your contour range. You will also need to adjust the xrange and yrange for your plot. Read through the code carefully to see where adjustments need to be made for your particular contour.</p> 
+<p>**Notice that if you have a zero crossing, the values will be negative for the xrange. For your final plot, the labels will be fixed but for the x and y ranges, you will need to use the negative values.**</p> 
+<p>Write these values down because they will be important when you create an image in Montage and for the final overlay.</p>
+<p> Once you have created a contour plot which you are happy with, switch the lines in the code from plot to save. The parameters of the contour will then be save and used later. Next the image must be created!
+
+
+<dt> <b> <font color=#008000>Creating Images</font> </b>
+<p>I used
+<a href="http://hachi.ipac.caltech.edu:8080/montage/"> Montage </a>
+to create my images. One big downfall of Montage is that you can only create images which are 1 degree by 1 degree so if you want to make a larger contour (for instance of an entire grid) you will need to piece together more than one image. Use your xrange and yrange values from the contour you created above to decide on the location to make the image and the "x" and "y" size. Montage allows you to type in the center coordinate of the image you would like to create and then define a region size in degrees. From the x and y range you decided on for your contour diagram, find the center of the contour and calculate a region size accordingly. The best image to use is SDSS r. If there is no Sloan coverage in your region, use DSS2 blue.</p>
+
+<p> Once one or all of your fits file images are downloaded from Montage and you have saved copies of the fits file in your directory, you must convert the fits file to a format which IDL can read. "mrdfits()" does this for you:</p>
+
+<p><code>IDL> img=mrdfits('mosaic.fits')</code></p>
+
+<p> If you only have one image, the above command is the only command you need to do for the image (other than saving it
+<code>IDL> save,img,filename='img.sav'</code>
+). If you have more than one image, you must piece together the images. First you need to re size the images so that you do not create an image which is huge. The following command will help with that. </p>
+
+<p><code>IDL> imgsmall=congrid(img,1000,1000)</code></p>
+
+<p> Once all the images are re sized, it is wise to average the scaling so that the images look like one big image rather than a bunch of images stuck together. Use the following code to do this for four images pieced together. </p>
+
+<p><code>IDL> imgULsmall=imgULsmall*mean(imgURsmall)/mean(imgULsmall)</code></p>
+<p><code>IDL> imgLRsmall=imgLRsmall*mean(imgURsmall)/mean(imgLRsmall)</code></p>
+<p><code>IDL> imgLLsmall=imgLLsmall*mean(imgURsmall)/mean(imgLLsmall)</code></p>
+
+<p> Above I adjusted three of the images to match the fourth. </p>
+
+<p>Here you can save the images individually if you need to reference them later or make smaller separate contours. </p>
+<p><code>IDL> save,imgURsmall,imgULsmall,imgLLsmall,imgLRsmall,filename='smalls.sav'</code></p>
+
+<p>Next the images must be pieced together into one big image. The following example pieces together the four images. </p>
+<p><code>IDL> bigimg=fltarr(2000,2000)</code></p>
+<p><code>IDL> bigimg[0:999,0:999]=imgLLsmall</code></p>
+<p><code>IDL> bigimg[1000:1999,1000:1999]=imgURsmall</code></p>
+<p><code>IDL> bigimg[0:999,1000:1999]=imgULsmall</code></p>
+<p><code>IDL> bigimg[1000:1999,0:999]=imgLRsmall</code></p>
+
+<p> Save the image to be read into the program later. <p/>
+<p><code>IDL> save,bigimg,filename='bigimg.sav'</code></p>
+
+
+<dt> <b> <font color=#008000>Putting the Image and Contour Together</font> </b>
+<p>Now that you have an image and contour, it is time to overlay them. Make sure your grid, image and contour are restored.</p>
+<p> This is the grid:</p>
+<p><code>IDL> restore,'/home/vieques2/galaxy/grids/1436+05/gridbf_1436+05a.sav'</code></p>
+<p> This is the image from montage converted to a file for IDL to read: </p>
+<p><code>IDL> restore,'bigimg.sav'</code></p>
+<p> This is the contour from contourplot.pro:</p>
+<p><code>IDL> restore,'contour.sav'</code></p>
+<p> Run overlay:</p>
+<p><code>IDL> overlay,grid,znew,rahr,decdeg,c_levels,xmin,xmax,ymin,ymax,bigimg</code></p>
+<p> The first time you do this, most likely it will not work. You will need to make adjustments to the code to suit your particular contour and image. Regions that might need adjustments are:</p>
+<ul>
+<li> The labels: <p>The code creates labels of the form: 00h00m00s for RA and 00d00m00s for Dec. If you would like your labels less clustered, adjust as needed. You can make adjustments in lines 64 through 87.</p>
+<li> The size of the image: <p>You may need to re size the image using 
+<code>congrid()</code>.
+ Make adjustments in line 94.</p>
+<li> You will need to invert the image from a mostly black image to a mostly white image. Lines 101 through 114 in the code explain how to do this. The image is inverted in line 97 using:
+<p><code>imgresizedimg=(-1.)*imgresizedimg</code></p>
+<p>The code also prints the minimum and maximum array values of the image before and after the invert. Use these values to help decide how to scale the pixel values. For example if <b>before</b> the invert, the minimum value is 920, use: </p>
+<p><code>tvscl,imgresizedimg>(-980)</code></p>
+<p> for line 114 of the code. You may need to play around with these numbers to find the one that works for your particular image.</p>
+<li> The position of the image: <p>You may need to move around the image so that it fits under the contour in the correct position. Adding and subtracting from <code>PX[0]</code> and <code>PX[0]</code> will move the image all over the screen. This can be done in line 114 of the code.
+<li>The location and size of the beam: You will need to adjust the location and size of the beam with:</p>
+<p><code>oplot,[0.,xmax-.01],[0.,ymin+.15],psym=8,symsize=6.6,color=1</code></p>
+<p> in line 121 of the code. "symsize" adjusts the size and the coordinates can be typed in place of "xmax-.01" and "ymin+.15". The coordinate values used are RA in hours and DEC in degrees. Remember that the beam size is 4 arc minutes.</p>
+<li> The position of the plot: <p>You may need to move the position of the plot so that you can read all the labels or just to place it in a different location in the window. Line 127 has a <code>position=</code> and you can adjust these values as you see fit.</p>
+</ul>
+
+<p>Once you have created an overlay you can save a jpeg of your overlay with:</p> 
+<p><code>IDL> response=tvread(filename='bigimg',/JPEG,quality=100,/nodialog)</code></p>
+
+<br> You can find a program to make contours <a href="contourplot.pro">here</a> and a program to overlay contours on an image <a href="overlay.pro">here</a>. Read through all the code and make adjustments as needed.
+<ul>
+
+
+<br>
+<br>
+<hr>
+Last update: &nbsp <font color=#008000><b>Mon Feb 18 09:22:11 EST 2013</b></font>
+by <i> martha</i></p>
+</body>
+
+</html>

@@ -1,0 +1,57 @@
+<html>
+ 
+<head>
+<TITLE>Documentation of EGGIDL Routines in /home/dorado3/galaxy/eggidl/gen
+</TITLE>
+</head>
+ 
+<body>
+<H1>Documentation of EGGIDL Routines in /home/dorado3/galaxy/eggidl/gen</H1>
+
+<p>This directory contains helpful IDL codes for EGG purposes, including basic procedures to calculate angular separations between objects, to 
+convert galaxy types between different systems, and to convert heliocentric recessional velocities to velocities in the CMB rest frame. This 
+directory also contains the ALFALFA distance calculation code.</p>
+ 
+<p><h3>Links to Documentation Pages</h3></p>
+<ul>
+	<li><a href="egggenlist.html">egggenlist.html</a>: file created with the IDL routine mk_html_help, including the header information from every 
+routine in the directory.
+	<li><a href="/home/dorado3/galaxy/idl_alfa/README_DISTANCES.html">Estimating Galaxy Distances</a>: Tutorial for using idl_alfa procedures to 
+calculate distances to objects 
+in 
+ALFALFA or AGC catalogs. Note that in January 2010, distance estimation software was moved from egggen/egggeninit to idl_alfa/alfinit.
+	<li><a href="votables_intro.html">VOTables Introduction</a>: A tutorial for using the VOTables IDL library to retrieve FITS images from NVO 
+SIAP Services, with examples and sample code for retrieving data from
+SDSS.
+        <li><a href="catalogs_intro.html">Catalog Matching
+	Introduction</a>: An introduction for matching ALFALFA
+	detections to other catalogs, including 2MASS, SDSS, and the VAGC. 
+
+	<li>Plotting procedures (for ALFALFA paper-style diagrams in EPS format)
+		<ul>
+		<li><a href="egggenlist.html#EPSINIT">Epsinit</a> and <a href="egggenlist.html#EPSTERM">Epsterm</a>, which are routines that simplify the creation of EPS 
+files. These are required for each of the following plotting procedures, and are compiled with EGGGENINIT.
+		<li>Histograms, both <a href="egggenlist.html#CAT_HISTS_DISTANCE">with masses</a> (need to have a *.table formatted catalog output from distance_catalog.pro) 
+and <a href="egggenlist.html#CAT_HISTS_GALCAT">without masses</a> (uses a GALCAT catalog). Histograms of cz, w50, integrated flux (logarithmic), and SNR (also logarithmic) in 
+the GALCAT case, with an extra log(HIMASS) histogram in the case of CAT_HISTS_DISTANCE. For the papers, we use the 5-histogram version with masses, but CAT_HISTS_GALCAT 
+exists so that you can take a quick look at your catalog 
+after using GALCAT but before sorting out distance problems.
+		<li><a href="egggenlist.html#CZDISTRIB">Expected redshift distributions</a> calculated for *.table formatted catalogs (output from distance_catalog.pro). 
+Reads a catalog, and plots the observed redshift distribution as a histogram, with an overplot of a calculated expected redshift distribution. In the call to the program, you 
+get to specify the Schechter parameters for your assumed 
+HIMF.
+		<li><a href="egggenlist.html#CONE_PLOT_OPT">Coneplots</a> are a little trickier; definitely read the documentation at the link to learn how to call the 
+procedure. The code works whether your RA range crosses 0 hours or not. CONE_PLOT_OPT reads catalogs in GALCAT format, and then makes an EPS with two cone plots, one of 
+ALFALFA galaxies in an RA, DEC range and one of optical galaxies (pulled out of the AGC) in the same range. Must specify an upper cz limit. The procedure automatically 
+plots the outer edges of the cone (min and max RA) as well as a central line but in many cases you will want to add your own "rays" of RA and your own labels. Therefore, this 
+is one 
+case where it is probably wise to make a local copy to fuss with when you need to make your diagram look nice, but you can get the overall gist by using the EGGGEN version.
+		</ul>
+
+</ul>
+
+<hr>
+<address><font color=#cc0f14> This page created and maintained by Cornell's ExtraGalactic Group.</font></address>
+
+</body>
+</html>

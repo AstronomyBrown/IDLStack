@@ -1,0 +1,15 @@
+#
+# Distances to subclusters and clouds
+#
+# format code: (A2,3x,F7.4,2x,F5.3,1x,A23)
+#
+# The first column codes are as described in vcc_agc.cross
+#
+#Mem dist     edist source
+A    16.7000  0.600 Mei07                   
+B    16.4000  0.300 Mei07                   
+g    16.5500  0.600 Combined A+B from Mei07 
+-    16.5500  0.600 Combined A+B from Mei07 
+W'   22.9000  0.700 Mei07                   
+W    24.2000  4.800 From old hardwired_dist
+M    30.1000  6.000 From old hardwired_dist

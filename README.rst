@@ -48,13 +48,11 @@ Basics
 The basic calling sequence for IDLstack routines specifies the path to either an input configuration file
 (`aa_stack.pro <aa_stack.html>`) or the output stack directory (`aa_measure.pro <aa_measure.html>` and `aa_dagjk.pro <aa_dagjk.html>`)::
 
-    IDL> aastack, cfgfile='path/to/cfigfile'
+    IDL> aa_stack, cfgfile='path/to/cfigfile'
 
     IDL> aa_measure, stackingdir='path/to/stacks'
 
     IDL> aa_dagjk, stackingdir='path/to/stacks'
-
-
 
 Requirements
 ------------

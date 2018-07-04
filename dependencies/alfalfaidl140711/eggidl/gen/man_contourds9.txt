@@ -1,0 +1,35 @@
+Overlaying radio (or other) contours on images in DS9
+by Krzysztof Findeisen
+Last modified 10/06/2006
+
+1.  Create the contours in IDL. The last step of this process should be a 
+	call to the CONTOUR procedure.
+
+2a. Find the decimal degree coordinates of the edges of the image from 
+	which the contours are being generated (e.g., for ALFALFA data you 
+	can use the mousover features in gridview). Then define two 
+	arrays:
+		Let nx, ny be size of contour source image in pixels
+		Let ramin, ramax, decmin, decmax be edge coordinates
+		x = dindgen(nx)*( ramax- ramin)/(nx-1) +  ramin
+		y = dindgen(ny)*(decmax-decmin)/(ny-1) + decmin
+		[The "nx-1" assumes ramax is the value AT the edge pixel]
+    Revise the call to CONTOUR so that the next two arguments after the 
+    	image are x and y. The output should be exactly the same, but now 
+    	with the graph axes in WCS rather than image coordinates.
+2b. An alternative approach is to clip the source image to the size and 
+	position of the image on which you plan to overlay the contours. 
+	I consider this version more difficult and less flexible than 2a. 
+	You may also have to fiddle with some settings to get DS9 to 
+	recognize that your contours are in image coordinates; I haven't 
+	checked.
+
+3.  Call CONTOURDS9 with exactly the same arguments used in the call to 
+	CONTOUR. Add a keyword argument, DS9REG, specifying the file to 
+	which to print the contours.
+
+4.  Start DS9, load the image on which you want to overlay the contours,
+	and choose "Contour Parameters..." in the Analysis menu. In the 
+	File menu of the countour parameters window, choose "Load 
+	Contours..." and then select the file CONTOURDS9 created. The 
+	contours should now be displayed on top of the loaded image.

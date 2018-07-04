@@ -1,0 +1,9 @@
+This is the home directory for routines developed to
+examine the data acquired for LBW followup of ALFALFA.
+
+Update history:
+26Jan2012:   Directory created: mph
+14Nov2012:   Updated calls to observing program from a2669 to a2707
+19Jan2013:   Updated with new stuff from UAT13
+20Dec2013:   Updated with full fitting routines, new plotting, etc.
+04Jun2014:   Updated with several bug fixes and additional features

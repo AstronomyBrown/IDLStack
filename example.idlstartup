@@ -1,0 +1,23 @@
+;;;;;Startup file for IDL
+; Set IDL Path
+idlDir = '~/.idl/idl/'
+idlStackDir='~/path/to/IDLstack/'
+
+!path = expand_path('+'+idlDir+'packages/coyote/')+':' + $
+		expand_path('+'+idlDir+'packages/utils/')+':' + $
+		expand_path('+'+idlDir+'packages/IDLAstro/')+':' + $		
+		expand_path('+'+idlDir+'packages/textoidl/')+':' + $		
+		expand_path('+'+idlStackDir+'src/')+':' + $
+		!path
+
+!edit_input = 500
+device, true_color = 24
+device, decomposed = 0
+device, retain = 2
+
+; Make sure DejaVuSans is the true-type font - makes sun and star symbol easy
+; cgSet_TTFont, 'Dejavusans' 
+; wDelete
+
+print, "IDL startup file loaded successfully"
+print, ""

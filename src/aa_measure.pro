@@ -162,7 +162,9 @@ HIfreq=1420.405751786D
 lightsp=299792.458D
 deltaf=0.024414063
 
-xbin_tot = 5
+read, xbin_tot, prompt='Enter number of first parameter bins [5]: '
+if (xbin_tot eq '') then xbin_tot=5
+xbin_tot = fix(xbin_tot)
 ybin_tot = 5
 ; read, xbin_no, prompt='How many structures do you want to restore? (i.e. no. of bins) '
 

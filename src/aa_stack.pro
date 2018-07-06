@@ -291,10 +291,9 @@ output=paramf.output ;  output directory
 
 ; Limits used to bin sample for stacking
 ; gf_stack.pro, gf_measure.pro and gf_error.pro support two different modes of sample binning.
-; 1 - control for one key property while setting second and third parameters within limits
-; 2 - slightly more sophisticated binning in 2 dimensions accross a specified parameter space.
-;  Much more detail, including example outputs, is provided in the accompanying documentation.
-; if a property is not chosen bins are not used at all.
+; 1 - 1D binning, setting second and third parameters within limits
+; 2 - 2D binning accross a specified parameter space.
+; Note: If a property is not chosen bins are not used at all.
 
 ;;;;; 2Dchoice=N BINNING ONLY ;;;;;;;;;;;;;;
 ; set the limits for the parameter chosen above.
@@ -354,6 +353,9 @@ if Error_status ne 0 then begin
     nnpc_tot = fltarr(n_elements(ra_tot))
     mhpc_tot = fltarr(n_elements(ra_tot))
     iclass_tot = fltarr(n_elements(ra_tot))
+    AGN_K01 = fltarr(n_elements(ra_tot))
+    AGN_K03 = fltarr(n_elements(ra_tot))
+    W1_W2 = fltarr(n_elements(ra_tot))
     goto, skipread
 endif
 
@@ -368,7 +370,10 @@ ssfr_tot = data_tab_tot.sSFR_MEDIAN_tot ;
 fapc_tot = data_tab_tot.fa_prank ; fixed aperture percentage rank
 nnpc_tot = data_tab_tot.nn7_prank ; nth Neighbour percentage rank
 mhpc_tot = data_tab_tot.mh_prank ; nth Neighbour percentage rank
-iclass_tot = data_tab_tot.I_CLASS
+iclass_tot = data_tab_tot.I_CLASS ; ionisation class
+AGN_K01 = data_tab_tot.AGN_K01_flag ; Kewley+ 01 AGN class
+AGN_K03 = data_tab_tot.AGN_K03_flag ; Kauffmann+ 03 AGN class
+W1_W2 = data_tab_tot.W1_W2 ; W1-W2 colour
 
 skipread:
 print,'Total no. input objects:', ndata_tot
@@ -393,10 +398,11 @@ if KEYWORD_SET(usrinput) then begin
     read, output, prompt='Please enter output directory name: '
 
     ; select stacking units
-    read,whatstack,prompt='What do you want to stack? [1] fluxes (1), M_HI (2) or gas fractions (3)?  '
+    read,whatstack,prompt='Do you want to stack fluxes (1), M_HI (2) or gas fractions (3)?  [1] '
 
     ; select the SFR estimate
-    sfrstack_str = ['','Choose SFR estimate...','... MPA total [B04] (1), SED integrated [S16] (2), Halpha SFRs [K98] (3)?', '']
+    sfrstack_str = ['', 'Choose SFR estimate...' $
+                      , '... MPA total [B04] (1), SED integrated [S16] (2), Halpha SFRs [K98] (3)?', '']
     print, sfrstack_str, FORMAT='(A)' 
     read, sfrstack ,prompt=''
 
@@ -406,80 +412,92 @@ if KEYWORD_SET(usrinput) then begin
     read, lgOHstack ,prompt=''
 
     ; choose galaxies cent/sat
-    BCG_stack_str = ['','Select the sample you want to stack:', 'all galaxies: 1', 'isolated centrals: 2',$ 
-                            'group centrals: 3', 'all centrals: 4', 'satellites: 5', '']
+    BCG_stack_str = ['' , 'Select the sample you want to stack:' $
+                        , 'all galaxies: 1' $
+                        , 'isolated centrals: 2' $ 
+                        , 'group centrals: 3' $
+                        , 'all centrals: 4' $
+                        , 'satellites: 5', '']
     print, BCG_stack_str, FORMAT='(A)' 
     read, BCG_stack ,prompt=''
     print, ''
 
     ; bin in 2 dimensions
-    CDFchoice_str = ['','Are you stacking using cumulative distribution function (CDF) binning? [N]',$
-                         '(Y/N)', '']
+    CDFchoice_str = ['', 'Are you stacking using cumulative distribution function (CDF) binning?' $
+                       , '(y/N)', '']
     print, CDFchoice_str, FORMAT='(A)' 
     read, CDFchoice ,prompt=''
 
     CDFchoice = strmid(strupcase(CDFchoice),0,1)
     if CDFchoice eq 'Y' then begin
-        CDFstack_str = ['','Which CDF bins do you want to stack?', 'Mass-Metallicity: 1', 'Mass-SFR: 2',$ 
-                            'Mass-sSFR: 3', '']
+        CDFstack_str = ['','Which CDF bins do you want to stack?' $
+                          , 'Mass-Metallicity: 1' $
+                          , 'Mass-SFR: 2' $ 
+                          , 'Mass-sSFR: 3', '']
         print, CDFstack_str, FORMAT='(A)' 
         read, CDFstack ,prompt=''
         goto, paramskip
     endif
 
     ; Select the parameters and set limits
-    whatp1_str = ['','What is the first parameter? ',$
-                    '1: stellar mass [log Msol]',$
-                    '2: NUV-r [mag]',$
-                    '3: stellar surface density [log Msol kpc^-2]',$
-                    '4: halo mass [log Msol]',$
-                    '5: sSFR [log yr^-1]',$
-                    '6: metallicity [log O/H + 12]',$
-                    '7: g-r [mag]', '']
+    whatp1_str = ['','What is the first parameter? ' $
+                    , '1: stellar mass [log Msol]' $
+                    , '2: NUV-r [mag]' $
+                    , '3: stellar surface density [log Msol kpc^-2]' $
+                    , '4: halo mass [log Msol]' $
+                    , '5: sSFR [log yr^-1]' $
+                    , '6: metallicity [log O/H + 12]' $
+                    , '7: g-r [mag]', '']
     print, whatp1_str, FORMAT='(A)' 
     read,whatp1,prompt=''
 
     print, ''
-    whatp2_str = ['','What is the second parameter? ',$
-                    '1: stellar mass [log Msol]',$
-                    '2: NUV-r [mag]',$
-                    '3: stellar surface density [log Msol kpc^-2]',$
-                    '4: halo mass [log Msol]',$
-                    '5: sSFR [log yr^-1]',$
-                    '6: metallicity [log O/H + 12]',$
-                    '7: g-r [mag]',$
-                    '8: SFR [log Msol yr^-1]',$
-                    '9: fixed aperture density percentile rank',$
-                    '10: nearest neighbour density percentile rank',$
-                    '11: halo mass percentile rank',$
-                    '12: group multiplicity',$
-                    '13: redshift',$
-                    '99: none (only allowed for p2 and p3)', '']
+    whatp2_str = ['', 'What is the second parameter? ' $
+                    , '1: stellar mass [log Msol]' $
+                    , '2: NUV-r [mag]' $
+                    , '3: stellar surface density [log Msol kpc^-2]' $
+                    , '4: halo mass [log Msol]' $
+                    , '5: sSFR [log yr^-1]' $
+                    , '6: metallicity [log O/H + 12]' $
+                    , '7: g-r [mag]' $
+                    , '8: SFR [log Msol yr^-1]' $
+                    , '9: fixed aperture density percentile rank' $
+                    , '10: nearest neighbour density percentile rank' $
+                    , '11: halo mass percentile rank' $
+                    , '12: group multiplicity' $
+                    , '13: redshift' $
+                    , '14: Kewley+01 AGN classification flag' $
+                    , '15: Kauffmann+03 AGN classification flag' $
+                    , '16: W1-W1 colour [mag]' $
+                    , '99: none (only allowed for p2 and p3)', '']
     print, whatp2_str, FORMAT='(A)'
     p2lim = [-99., 99.]
     read,whatp2,prompt=''
 
     if whatp2 lt 99 then read,p2lim,prompt='Enter limits for parameter 2 (e.g. >>> -99,99): '
     print, ''
-    whatp3_str = ['','What is the third parameter? ',$
-                    '1: stellar mass [log Msol]',$
-                    '2: NUV-r [mag]',$
-                    '3: stellar surface density [log Msol kpc^-2]',$
-                    '4: halo mass [log Msol]',$
-                    '5: sSFR [log yr^-1]',$
-                    '6: metallicity [log O/H + 12]',$
-                    '7: g-r [mag]',$
-                    '8: SFR [log Msol yr^-1]',$
-                    '9: fixed aperture density percentile rank',$
-                    '10: nearest neighbour density percentile rank',$
-                    '11: halo mass percentile rank',$
-                    '12: group multiplicity',$
-                    '13: redshift',$
-                    '99: none (only allowed for p2 and p3)', '']    
+    whatp3_str = ['', 'What is the third parameter? ' $
+                    , '1: stellar mass [log Msol]' $
+                    , '2: NUV-r [mag]' $
+                    , '3: stellar surface density [log Msol kpc^-2]' $
+                    , '4: halo mass [log Msol]' $
+                    , '5: sSFR [log yr^-1]' $
+                    , '6: metallicity [log O/H + 12]' $
+                    , '7: g-r [mag]' $
+                    , '8: SFR [log Msol yr^-1]' $
+                    , '9: fixed aperture density percentile rank' $
+                    , '10: nearest neighbour density percentile rank' $
+                    , '11: halo mass percentile rank' $
+                    , '12: group multiplicity' $
+                    , '13: redshift' $
+                    , '14: Kewley+01 AGN classification flag' $
+                    , '15: Kauffmann+03 AGN classification flag' $
+                    , '16: W1-W1 colour [mag]' $
+                    , '99: none (only allowed for p2 and p3)', '']    
     print, whatp3_str, FORMAT='(A)' 
     p3lim = [-99., 99.]
     read,whatp3,prompt=''
-    if whatp3 lt 99 then read,p3lim,prompt='Enter limits for parameter 3 (e.g. >>> -99,99): ' 
+    if whatp3 lt 99 then read,p3lim, prompt='Enter limits for parameter 3 (e.g. >>> -99,99): ' 
     print, ''
 endif
 
@@ -532,7 +550,6 @@ CATCH, /CANCEL
 
 ; if metallicities required, select valid estimates
 if lgOHstack ge 2 then begin
-
 
     rad_covfrac = (fib_area/gal_area) *100
     print, 'No. galaxies w/ fibre covering > 20% area:', N_ELEMENTS(rad_covfrac[WHERE(rad_covfrac ge 20)])
@@ -602,7 +619,6 @@ if CDFchoice eq 'Y' then goto, paramskip
 ;;---------------------------------------------------------------------------------------------
 ;       2 - Iteratively bin sample for stacking. In general, bin limits are passed from the configuration file,
 ;          however, 2D box bin limits (e.g. across the MZR) are hard coded for the moment.
-
 mstar_lims=double(paramf.mstar_lims)
 nuvr_lims=double(paramf.nuvr_lims)
 mustar_lims=double(paramf.mustar_lims)
@@ -610,7 +626,6 @@ mhalo_lims=double(paramf.mhalo_lims)
 ssfr_lims=double(paramf.ssfr_lims)
 logOH_lims=double(paramf.logOH_lims)
 gr_lims=double(paramf.gr_lims)
-
 
 case whatp1 of
     1: p1lim = mstar_lims
@@ -764,6 +779,9 @@ for j=0,N_ELEMENTS(p1lim)-2 do begin
     11: param_2 = mhpc_tot
     12: param_2 = ngal_tot
     13: param_2 = z_tot
+    14: param_2 = AGN_K01
+    15: param_2 = AGN_K03
+    16: param_2 = W1_W2
     99: param_2 = mass_tot
     endcase
 
@@ -781,11 +799,14 @@ for j=0,N_ELEMENTS(p1lim)-2 do begin
     11: param_3 = mhpc_tot
     12: param_3 = ngal_tot
     13: param_3 = z_tot
+    14: param_2 = AGN_K01
+    15: param_2 = AGN_K03
+    16: param_2 = W1_W2
     99: param_3 = mass_tot
     endcase
 
     PRINT, ''
-    ;; upper and lower limit condition on bins
+    ; apply limits and bin galaxies
     case BCG_stack of
     1: begin
         if CDFchoice eq 'N' then begin
@@ -800,7 +821,6 @@ for j=0,N_ELEMENTS(p1lim)-2 do begin
                 and (param_3 ge p3lim[0]) and (param_3 lt p3lim[1]))
         endif
         end
-
     2: begin ; isolated
         PRINT, 'stacking isolated central galaxies (Ngal=1 & bcgflag=1)'
         bin_cond = WHERE((param_1 ge p1lim[j]) and (param_1 lt p1lim[j+1]) $

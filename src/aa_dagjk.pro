@@ -152,9 +152,9 @@ end
 ;    stackingdir : in, required, type=string
 ;                of the output directory of aa_measure.pro
 ;
-;    cfgfile : in, required, type=string
+;    parameterFile : in, required, type=string
 ;                Configuration file containing path to sample catalogue, options for stacking routine,
-;                bin edges (see 'inputexample.cfg').
+;                bin edges (see 'inputexample.yaml').
 ;
 ; :Description:     
 ;   Procedure
@@ -185,13 +185,9 @@ end
 ;        jknife_flx,jknife_mhi,jknife_gf  - 5 independent Jacknife measures of stacked flux,
 ;                                            HI mass or gas fraction.
 ;
-;       
-; :Uses: 
-;    f_bmask, b_fit, progbar, freqshift
-;       
-; :Bugs:
-;  It is possible for aa_dagjk program can handle multiple stacking directories, however to enable 
-;  this functionality the following lines::
+; :Options:
+;  It is possible for aa_dagjk program can handle multiple stacking directories. To do this pass an array
+;  of directory strings to 
 ;       
 ;       pro aa_dagjk, stackingdir
 ;       folders = [stackingdir]
@@ -201,6 +197,11 @@ end
 ;
 ;       pro aa_dagjk, dir1, dir2, ..., dirN
 ;       folders = [dir1, dir2, ..., dirN]
+;       
+; :Uses: 
+;    f_bmask, b_fit, progbar, freqshift
+;       
+; :Bugs:
 ;
 ;
 ; :Categories: 
@@ -208,37 +209,41 @@ end
 ;
 ;  
 ;-
-pro aa_dagjk, stackingdir, cfgfile
-folders = [stackingdir]
+pro aa_dagjk, stackingdir, parameterFile
 
-paramf = gm_read_textstructure(cfgfile)
+; handle single and multiple directories 
+if n_elements(stackingdir) eq 1 then begin
+    folders = [stackingdir]
+    paramf = [parameterFile]
+endif else begin
+    folders = stackingdir
+endelse
 
 !EXCEPT=2
 ; Constants used
-lightsp=299792.458D           ;km/s
-restfrq=double(paramf.restfrq)    ; HI rest freq [MHz]
-deltaf=double(paramf.deltaf)    ; ALFALFA channel width [MHz/chn]
-nchn=double(paramf.nchn)  ; no. ALFALFA channels
+lightsp=299792.458D  ;km/s
+restfrq=1420.4058    ; HI rest freq [MHz]
+deltaf=0.024414063   ; ALFALFA channel width [MHz/chn]
+nchn=1024            ; no. ALFALFA channels
 
 ;;Define final frequency array: 1024 chn, 1420MHz (v_0=V_syst) in chn 511.
 frqarr=restfrq+(findgen(nchn)-511)*deltaf ;frequency array
 
-; Inputs
-path=paramf.path ; source path
-sampledir=paramf.sampledir ; database path
-listname=paramf.listname ; database name
-
-samplef = sampledir+listname
-
-
-data_tab_tot=mrdfits(samplef,1)
-z_tot = data_tab_tot.z
-mass_tot=data_tab_tot.lgMst_median
-ID_tot=data_tab_tot.ID
-
-
 FOR fold=0,N_ELEMENTS(folders)-1 do begin
+
+    ; read sample list
+    paramf = gm_read_textstructure(parameterFile[fold])
+    path=paramf.path ; source path
+    sampledir=paramf.sampledir ; database path
+    listname=paramf.listname ; database name
+
+    samplef = sampledir+listname
+    data_tab_tot=mrdfits(samplef,1)
+    z_tot = data_tab_tot.z
+    mass_tot=data_tab_tot.lgMst_median
+    ID_tot=data_tab_tot.ID
     
+    ; output folder
     output = folders[fold]
     spawn,'mkdir '+output+'/resample/'
     PRINT, ''

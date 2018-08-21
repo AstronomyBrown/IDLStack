@@ -356,6 +356,7 @@ if Error_status ne 0 then begin
     AGN_K01 = fltarr(n_elements(ra_tot))
     AGN_K03 = fltarr(n_elements(ra_tot))
     W1_W2 = fltarr(n_elements(ra_tot))
+    OIII_tot = fltarr(n_elements(ra_tot))
     goto, skipread
 endif
 
@@ -366,6 +367,7 @@ sfr_tot_mpa_tot = data_tab_tot.SFR_MEDIAN_tot ; Aperture orrected MPA sfr
 sfr_fib_mpa_tot = data_tab_tot.SFR_MEDIAN_fib ; Fiber MPA sfr
 sfr_tot_Ha_tot = data_tab_tot.SFR_K98 ; Halpha (kennicutt 1998)
 sfr_tot_SED_tot = data_tab_tot.logSFR_SED_S16 ; salim optical/UV
+sfr_
 ssfr_tot = data_tab_tot.sSFR_MEDIAN_tot ;
 fapc_tot = data_tab_tot.fa_prank ; fixed aperture percentage rank
 nnpc_tot = data_tab_tot.nn7_prank ; nth Neighbour percentage rank
@@ -374,6 +376,7 @@ iclass_tot = data_tab_tot.I_CLASS ; ionisation class
 AGN_K01 = data_tab_tot.AGN_K01_flag ; Kewley+ 01 AGN class
 AGN_K03 = data_tab_tot.AGN_K03_flag ; Kauffmann+ 03 AGN class
 W1_W2 = data_tab_tot.W1_W2 ; W1-W2 colour
+OIII_tot = data_tab_tot.OIII_sara ; OIII_sara
 
 skipread:
 print,'Total no. input objects:', ndata_tot
@@ -440,14 +443,15 @@ if KEYWORD_SET(usrinput) then begin
     endif
 
     ; Select the parameters and set limits
-    whatp1_str = ['','What is the first parameter? ' $
+    whatp1_str = ['', 'What is the first parameter? ' $
                     , '1: stellar mass [log Msol]' $
                     , '2: NUV-r [mag]' $
                     , '3: stellar surface density [log Msol kpc^-2]' $
                     , '4: halo mass [log Msol]' $
                     , '5: sSFR [log yr^-1]' $
                     , '6: metallicity [log O/H + 12]' $
-                    , '7: g-r [mag]', '']
+                    , '7: g-r [mag]' $
+                    , '8: L(OIII) [log erg/s]', '']
     print, whatp1_str, FORMAT='(A)' 
     read,whatp1,prompt=''
 
@@ -460,15 +464,16 @@ if KEYWORD_SET(usrinput) then begin
                     , '5: sSFR [log yr^-1]' $
                     , '6: metallicity [log O/H + 12]' $
                     , '7: g-r [mag]' $
-                    , '8: SFR [log Msol yr^-1]' $
-                    , '9: fixed aperture density percentile rank' $
-                    , '10: nearest neighbour density percentile rank' $
-                    , '11: halo mass percentile rank' $
-                    , '12: group multiplicity' $
-                    , '13: redshift' $
-                    , '14: Kewley+01 AGN classification flag' $
-                    , '15: Kauffmann+03 AGN classification flag' $
-                    , '16: W1-W1 colour [mag]' $
+                    , '8: L(OIII) [log erg/s]' $
+                    , '9: SFR [log Msol yr^-1]' $
+                    , '10: fixed aperture density percentile rank' $
+                    , '11: nearest neighbour density percentile rank' $
+                    , '12: halo mass percentile rank' $
+                    , '13: group multiplicity' $
+                    , '14: redshift' $
+                    , '15: Kewley+01 AGN classification flag' $
+                    , '16: Kauffmann+03 AGN classification flag' $
+                    , '17: W1-W1 colour [mag]' $
                     , '99: none (only allowed for p2 and p3)', '']
     print, whatp2_str, FORMAT='(A)'
     p2lim = [-99., 99.]
@@ -476,7 +481,7 @@ if KEYWORD_SET(usrinput) then begin
 
     if whatp2 lt 99 then read,p2lim,prompt='Enter limits for parameter 2 (e.g. >>> -99,99): '
     print, ''
-    whatp3_str = ['', 'What is the third parameter? ' $
+    whatp3_str = ['', 'What is the second parameter? ' $
                     , '1: stellar mass [log Msol]' $
                     , '2: NUV-r [mag]' $
                     , '3: stellar surface density [log Msol kpc^-2]' $
@@ -484,15 +489,16 @@ if KEYWORD_SET(usrinput) then begin
                     , '5: sSFR [log yr^-1]' $
                     , '6: metallicity [log O/H + 12]' $
                     , '7: g-r [mag]' $
-                    , '8: SFR [log Msol yr^-1]' $
-                    , '9: fixed aperture density percentile rank' $
-                    , '10: nearest neighbour density percentile rank' $
-                    , '11: halo mass percentile rank' $
-                    , '12: group multiplicity' $
-                    , '13: redshift' $
-                    , '14: Kewley+01 AGN classification flag' $
-                    , '15: Kauffmann+03 AGN classification flag' $
-                    , '16: W1-W1 colour [mag]' $
+                    , '8: L(OIII) [log erg/s]' $
+                    , '9: SFR [log Msol yr^-1]' $
+                    , '10: fixed aperture density percentile rank' $
+                    , '11: nearest neighbour density percentile rank' $
+                    , '12: halo mass percentile rank' $
+                    , '13: group multiplicity' $
+                    , '14: redshift' $
+                    , '15: Kewley+01 AGN classification flag' $
+                    , '16: Kauffmann+03 AGN classification flag' $
+                    , '17: W1-W1 colour [mag]' $
                     , '99: none (only allowed for p2 and p3)', '']    
     print, whatp3_str, FORMAT='(A)' 
     p3lim = [-99., 99.]
@@ -626,6 +632,7 @@ mhalo_lims=double(paramf.mhalo_lims)
 ssfr_lims=double(paramf.ssfr_lims)
 logOH_lims=double(paramf.logOH_lims)
 gr_lims=double(paramf.gr_lims)
+OIII_lims=double(paramf.OIII_lims)
 
 case whatp1 of
     1: p1lim = mstar_lims
@@ -647,11 +654,11 @@ case whatp1 of
     5: p1lim = ssfr_lims
     6: p1lim = logOH_lims
     7: p1lim = gr_lims
+    8: p1lim = OIII_lims
     endcase
 paramskip:
 
 if CDFchoice eq 'N' then goto, CDFskip
-
 
 ; define the x/y limits for each different mass-metallicity sample
 ; At the moment these bin limits are hard coded. This is because reading two dimensional arrays into 
@@ -763,6 +770,7 @@ for j=0,N_ELEMENTS(p1lim)-2 do begin
     5: param_1 = ssfr_tot
     6: param_1 = lgOH_12_tot
     7: param_1 = gr_tot
+    8: param_1 = OIII_tot
     endcase
     
     case whatp2 of
@@ -773,15 +781,16 @@ for j=0,N_ELEMENTS(p1lim)-2 do begin
     5: param_2 = ssfr_tot
     6: param_2 = lgOH_12_tot
     7: param_2 = gr_tot
-    8: param_2 = sfr_tot
-    9: param_2 = fapc_tot
-    10: param_2 = nnpc_tot
-    11: param_2 = mhpc_tot
-    12: param_2 = ngal_tot
-    13: param_2 = z_tot
-    14: param_2 = AGN_K01
-    15: param_2 = AGN_K03
-    16: param_2 = W1_W2
+    8: param_2 = OIII_tot
+    9: param_2 = sfr_tot
+    10: param_2 = fapc_tot
+    11: param_2 = nnpc_tot
+    12: param_2 = mhpc_tot
+    13: param_2 = ngal_tot
+    14: param_2 = z_tot
+    15: param_2 = AGN_K01
+    16: param_2 = AGN_K03
+    17: param_2 = W1_W2
     99: param_2 = mass_tot
     endcase
 
@@ -793,15 +802,16 @@ for j=0,N_ELEMENTS(p1lim)-2 do begin
     5: param_3 = ssfr_tot
     6: param_3 = lgOH_12_tot
     7: param_3 = gr_tot
-    8: param_3 = sfr_tot
-    9: param_3 = fapc_tot
-    10: param_3 = nnpc_tot
-    11: param_3 = mhpc_tot
-    12: param_3 = ngal_tot
-    13: param_3 = z_tot
-    14: param_2 = AGN_K01
-    15: param_2 = AGN_K03
-    16: param_2 = W1_W2
+    8: param_3 = OIII_tot
+    9: param_3 = sfr_tot
+    10: param_3 = fapc_tot
+    11: param_3 = nnpc_tot
+    12: param_3 = mhpc_tot
+    13: param_3 = ngal_tot
+    14: param_3 = z_tot
+    15: param_3 = AGN_K01
+    16: param_3 = AGN_K03
+    17: param_3 = W1_W2
     99: param_3 = mass_tot
     endcase
 
@@ -853,7 +863,6 @@ for j=0,N_ELEMENTS(p1lim)-2 do begin
     endcase
     PRINT, ''
 
-
     data_tab = data_tab_tot[bin_cond]
     ndata = N_ELEMENTS(ra_tot[bin_cond])
     ID = ID_tot[bin_cond]
@@ -866,6 +875,7 @@ for j=0,N_ELEMENTS(p1lim)-2 do begin
     C = C_tot[bin_cond]
     NUVR = NUVR_tot[bin_cond]
     gr = gr_tot[bin_cond]
+    OIII = OIII_tot[bin_cond]
     sfr = sfr_tot[bin_cond]
     ssfr = ssfr_tot[bin_cond]
     halo = halo_tot[bin_cond]
@@ -951,6 +961,7 @@ for j=0,N_ELEMENTS(p1lim)-2 do begin
         5: mean_x = MEAN(ssfr)
         6: mean_x = MEAN(lgOH_12)
         7: mean_x = MEAN(gr)
+        8: mean_x = MEAN(OIII)
     endcase
         
     ;;---------------------------------------------------------------------------------------------
